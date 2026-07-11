@@ -1109,6 +1109,15 @@ function noise2(x,y){
               lerp(g(_P[_P[X]+Y+1],xf,yf-1),g(_P[_P[X+1]+Y+1],xf-1,yf-1),u),v);
 }
 function fbm(x,y,o=4){let v=0,a=0.5,f=1,m=0;for(let i=0;i<o;i++){v+=a*noise2(x*f,y*f);m+=a;a*=0.5;f*=2.1;}return v/m;}
+// Slightly anisotropic fbm — real paper tooth and pigment settling are never
+// perfectly isotropic (felt-pressing direction, brush-stroke direction).
+// Stretching the sample coordinates on one axis breaks the "generated noise"
+// look without being obviously directional at a glance.
+function fbmAniso(x,y,o=4,stretch=1.35,angle=0.35){
+  const ca=Math.cos(angle), sa=Math.sin(angle);
+  const rx=x*ca - y*sa, ry=(x*sa + y*ca)*stretch;
+  return fbm(rx, ry, o);
+}
 
 function parseHex(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
 function rgbToHex(r,g,b){return'#'+[r,g,b].map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');}
@@ -1152,6 +1161,18 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
   // Stable seed from hex so the same color always renders identically
   let _hv=0; for(let _ci=0;_ci<hex.length;_ci++){ _hv=(_hv*31+hex.charCodeAt(_ci))&0xffffff; }
   const ox=(_hv%200), oy=((_hv>>8)%200);
+
+  // Pigment mass-tone reference (a darker, more saturated version of the paint's
+  // own hue) — granulation pushes toward THIS rather than toward black, so heavy
+  // pigment concentration reads as "more paint" instead of "a shadow on top".
+  const maxC=Math.max(r,g,b), minC=Math.min(r,g,b);
+  const satRange=maxC-minC;
+  // Darken by lowering value while slightly boosting the existing saturation —
+  // mimics how a thicker film of the same pigment looks, not a neutral shadow.
+  const massR = r - (r-minC)*0.12 - 38;
+  const massG = g - (g-minC)*0.12 - 38;
+  const massB = b - (b-minC)*0.12 - 38;
+
   const imgData=ctx.createImageData(PW,PH); const dat=imgData.data;
   for(let py=0; py<PH; py++){
     const yy=py/PH;
@@ -1160,10 +1181,17 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
       const xx=px/PW;
       const nx=px/dpr;
       const i=(py*PW+px)*4;
-      // — Large-scale wash variation (unevenness like a brush stroke)
-      const wash=fbm(ox+nx*0.04, oy+ny*0.04, 3);
-      // — Fine paper grain (subtle, visible especially through thin washes)
-      const grain=fbm(ox+nx*0.42, oy+ny*0.42, 2);
+
+      // — Shared paper-tooth field: ONE physical surface drives wash unevenness,
+      //   fine grain, AND granulation, so they correlate the way they do on real
+      //   cold-press paper instead of being three unrelated noise layers.
+      const tooth = fbmAniso(ox+nx*0.30, oy+ny*0.30, 3, 1.4, 0.4);
+
+      // — Large-scale wash variation (unevenness like a brush stroke) — a
+      //   coarser, independent field since this comes from application, not paper
+      const wash=fbm(ox+nx*0.045, oy+ny*0.045, 3);
+      // — Fine paper grain now reads FROM the shared tooth field
+      const grain=tooth;
       // — Edge pooling: pigment beads at the outer band (cauliflower effect)
       const dEdge=Math.min(Math.min(xx,1-xx), Math.min(yy,1-yy));
       const edgePool=Math.max(0, 1 - dEdge*5);
@@ -1179,17 +1207,44 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
       let outR = r*cover + pR*(1-cover);
       let outG = g*cover + pG*(1-cover);
       let outB = b*cover + pB*(1-cover);
-      // — Granulation: punctate specks + coarse clumps where heavy pigment settles
+
+      // — Granulation: bimodal — pigment concentrates in paper valleys (tooth low)
+      //   and is correspondingly thinner on paper peaks (tooth high). Real
+      //   granulation on cold-press paper shows organic, cloud-like mottled cells
+      //   (a few mm across) with crisp light/dark contrast — NOT fine uniform
+      //   speckling. Two scales are blended: broad mottled cells (dominant) plus
+      //   a finer texture riding on top for the "grainy" close-up feel.
       if(gran){
-        const gn=fbm(ox+nx*0.28, oy+ny*0.28, 3);
-        const speck=Math.max(0, gn-0.44);
-        let dark=Math.pow(speck, 1.15)*340;
-        const cl=fbm(ox+nx*0.10, oy+ny*0.10, 2);
-        if(cl<0.42) dark += (0.42-cl)*60;
-        outR -= dark; outG -= dark; outB -= dark;
+        const cell   = fbmAniso(ox+nx*0.045, oy+ny*0.045, 3, 1.3, 0.5);  // broad mottled cells — dominant
+        const fine   = fbmAniso(ox+nx*0.30,  oy+ny*0.30,  2, 1.2, 1.1);  // fine grain riding on top
+        const particulate = cell*0.72 + fine*0.28;
+
+        // Valleys (low particulate) → pigment pools → notably darker AND pushed
+        // toward mass-tone. Smoothstep-shaped falloff gives crisp cell edges
+        // instead of a soft gradient, matching how real granulation reads.
+        const vRaw = Math.max(0, 0.52 - particulate) / 0.52;
+        const valleyStrength = vRaw*vRaw*(3-2*vRaw) * 0.95; // smoothstep, higher ceiling
+        // Peaks (high particulate) → pigment thinned/displaced → distinctly
+        // lighter, letting real paper through. This bimodal half is what makes
+        // granulation read as texture rather than dirty shading.
+        const pRaw = Math.max(0, particulate - 0.50) / 0.50;
+        const peakStrength = pRaw*pRaw*(3-2*pRaw) * 0.65;
+
+        if(valleyStrength>0){
+          outR = lerp(outR, massR, Math.min(0.92, valleyStrength));
+          outG = lerp(outG, massG, Math.min(0.92, valleyStrength));
+          outB = lerp(outB, massB, Math.min(0.92, valleyStrength));
+        }
+        if(peakStrength>0){
+          outR = lerp(outR, pR, Math.min(0.55, peakStrength));
+          outG = lerp(outG, pG, Math.min(0.55, peakStrength));
+          outB = lerp(outB, pB, Math.min(0.55, peakStrength));
+        }
       }
-      // — Tiny per-pixel grain shift (subtle paper texture)
-      const gshift = (grain-0.5) * 12;
+
+      // — Tiny per-pixel grain shift (subtle paper texture, now correlated
+      //   with the same tooth field used for granulation)
+      const gshift = (grain-0.5) * (gran?8:12);
       outR += gshift; outG += gshift; outB += gshift;
       // — Wet sheen highlight (catches light in the upper-left)
       const sx=xx-0.22, sy=yy-0.18;
