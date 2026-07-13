@@ -85,6 +85,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 
 .palette-main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .palette-header{padding:0.85rem 1.25rem 0.65rem;border-bottom:1px solid var(--border2);background:var(--paper);display:flex;align-items:center;gap:0.8rem;flex-shrink:0;}
+.palette-mobile-switcher{display:none;}
 .palette-name-input{font-family:'IM Fell English',serif;font-size:1.1rem;border:none;background:transparent;color:var(--ink);outline:none;flex:1;min-width:140px;border-bottom:1.5px solid transparent;transition:border-color 0.15s;padding-bottom:1px;}
 .palette-name-input:focus{border-bottom-color:var(--gold);}
 .palette-header-row2{padding:0 1.25rem 0.7rem;border-bottom:1px solid var(--border);background:var(--paper);flex-shrink:0;}
@@ -149,6 +150,75 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .sg-note-input:focus{border-bottom-color:var(--gold);}
 .sg-note-input::placeholder{color:var(--ink3);font-style:italic;}
 .empty-palette-view{text-align:center;padding:4rem 1rem;color:var(--ink3);font-style:italic;font-size:0.9rem;}
+
+/* ── CUSTOM MIXED COLORS ── */
+.sg-section-label{
+  font-size:0.65rem;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--ink3);margin:0 0 0.6rem;padding-bottom:0.35rem;
+  border-bottom:1px solid var(--border2);
+}
+.sg-custom-grid{margin-bottom:1.6rem;}
+.sg-card.sg-custom{border-color:var(--gold2);box-shadow:0 2px 8px rgba(176,125,32,0.18);}
+.sg-custom-badge{
+  position:absolute;bottom:7px;left:7px;
+  background:rgba(28,26,22,0.75);color:var(--gold-light);
+  font-size:0.56rem;padding:2px 7px;border-radius:20px;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  white-space:nowrap;letter-spacing:0.02em;
+}
+
+/* ── MIX MODE SELECTION ── */
+.mix-toggle-btn{margin-left:auto;}
+.sort-btn.mix-toggle-btn.active{background:var(--rust);color:white;}
+.sg-card[onclick]{cursor:pointer;}
+.sg-mix-select{
+  position:absolute;top:7px;left:7px;z-index:5;
+  width:26px;height:26px;border-radius:50%;
+  border:2px solid rgba(255,255,255,0.85);
+  background:rgba(0,0,0,0.28);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  color:white;font-size:0.85rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;pointer-events:none; /* card itself handles the click */
+}
+.sg-mix-select.checked{background:var(--gold2);border-color:var(--gold2);color:var(--ink);}
+.sg-card.sg-selected-for-mix{box-shadow:0 0 0 3px var(--gold2),0 8px 24px var(--shadow2);transform:translateY(-2px);}
+
+/* ── FLOATING MIX BAR ── */
+.mix-bar{
+  position:sticky;bottom:0;left:0;right:0;margin-top:1rem;
+  background:var(--ink);border-radius:var(--r-lg);
+  padding:0.85rem 1rem;box-shadow:0 -8px 28px rgba(0,0,0,0.25),0 4px 16px rgba(0,0,0,0.2);
+  z-index:20;
+}
+.mix-bar-hint{color:rgba(250,246,239,0.6);font-size:0.8rem;font-style:italic;text-align:center;padding:0.3rem 0;}
+.mix-bar-row{display:flex;align-items:center;gap:0.7rem;flex-wrap:wrap;}
+.mix-bar-chips{display:flex;gap:4px;flex-shrink:0;}
+.mix-chip{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);flex-shrink:0;}
+.mix-bar-plus{color:var(--gold2);font-size:1rem;flex-shrink:0;}
+.mix-bar-result{width:38px;height:38px;border-radius:8px;border:2px solid rgba(255,255,255,0.3);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.mix-bar-actions{display:flex;gap:0.5rem;flex:1;min-width:200px;align-items:center;}
+.mix-name-input{
+  flex:1;min-width:100px;background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);border-radius:var(--r-sm);
+  color:var(--paper);font-family:'Crimson Pro',serif;font-size:0.8rem;
+  padding:0.45rem 0.65rem;outline:none;transition:border-color 0.13s;
+}
+.mix-name-input:focus{border-color:var(--gold2);}
+.mix-name-input::placeholder{color:rgba(250,246,239,0.4);}
+.mix-add-btn{
+  background:var(--gold2);color:var(--ink);border:none;
+  padding:0.5rem 0.9rem;border-radius:var(--r-sm);
+  font-family:'Crimson Pro',serif;font-size:0.8rem;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:background 0.13s;
+  flex-shrink:0;
+}
+.mix-add-btn:hover{background:var(--gold-light);}
+.mix-bar-names{
+  margin-top:0.5rem;font-size:0.68rem;color:rgba(250,246,239,0.55);
+  font-style:italic;display:flex;justify-content:space-between;gap:0.5rem;flex-wrap:wrap;
+}
+.mix-bar-hex{font-family:'Courier New',monospace;color:var(--gold2);font-style:normal;}
 
 .palette-sort-bar{display:flex;align-items:center;padding:0;background:var(--paper2);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .palette-sort-bar::-webkit-scrollbar{display:none;}
@@ -436,6 +506,14 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .palette-item-btn{min-width:36px;min-height:36px;font-size:0.9rem;}
   .sort-btn{padding:0.5rem 0.7rem;}    /* tighter so all five fit on a 390-wide phone */
   .sort-label{display:none;}            /* hide "6 colors" label on mobile to save space */
+  .mix-toggle-btn{margin-left:0;}       /* no sort-label to push against on mobile */
+  .mix-bar-row{flex-direction:column;align-items:stretch;}
+  .mix-bar-chips{justify-content:center;}
+  .mix-bar-plus{display:none;}
+  .mix-bar-result{align-self:center;width:44px;height:44px;}
+  .mix-bar-actions{width:100%;}
+  .mix-name-input{font-size:16px!important;}
+  .sg-mix-select{width:30px;height:30px;font-size:0.95rem;}
   .ref-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.65rem;}
   .swatch-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.65rem;}
   .ref-swatch{height:92px;}
@@ -443,6 +521,15 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .add-overlay button{min-height:44px;font-size:0.85rem;padding:0 1rem;}
   .add-overlay select{font-size:0.8rem;padding:0.35rem 0.5rem;max-width:140px;}
   .palette-header{flex-wrap:wrap;gap:0.5rem;padding:0.75rem 0.9rem 0.6rem;}
+  .palette-mobile-switcher{
+    display:block;width:100%;order:0;
+    font-family:'Crimson Pro',serif;font-size:16px;
+    padding:0.55rem 0.7rem;border:1px solid var(--border);
+    border-radius:var(--r-sm);background:var(--paper2);color:var(--ink);
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a7660'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 0.8rem center;
+  }
   .palette-name-input{font-size:16px!important;min-width:100%;order:1;}
   .btn-add-colors{width:100%;justify-content:center;display:flex;align-items:center;order:2;}
   .palette-header-row2{padding:0 0.9rem 0.6rem;}
@@ -2008,6 +2095,9 @@ function renderPaletteArea(){
   area.style.cssText='flex:1;overflow:hidden;display:flex;flex-direction:column;';
   area.innerHTML=`
     <div class="palette-header">
+      <select class="palette-mobile-switcher" id="palette-mobile-switcher" onchange="selectPalette(this.value)" aria-label="Switch palette">
+        ${palettes.map(p=>`<option value="${p.id}"${p.id===pal.id?' selected':''}>${p.name} (${p.colors.length})</option>`).join('')}
+      </select>
       <input class="palette-name-input" value="${pal.name}" onchange="renamePalette('${pal.id}',this.value)" maxlength="40">
       <button class="btn-add-colors" onclick="showPage('reference',document.querySelector('.nav-tab:nth-child(2)'))">+ Add Colors</button>
     </div>
@@ -2050,6 +2140,28 @@ function renderPaletteView(pal){
 }
 
 // ── SWATCH GRID ──────────────────────────────────────────────
+var mixModeActive=false;      // whether "Mix Colors" selection mode is on
+var mixSelectedIdxs=[];       // real indices (into pal.colors) currently selected for mixing
+
+function toggleMixMode(palId){
+  mixModeActive=!mixModeActive;
+  mixSelectedIdxs=[];
+  const pal=palettes.find(p=>p.id===palId);
+  if(pal) renderPaletteView(pal);
+}
+
+function toggleMixSelect(palId,idx){
+  const pal=palettes.find(p=>p.id===palId);
+  if(!pal) return;
+  const pos=mixSelectedIdxs.indexOf(idx);
+  if(pos>-1) mixSelectedIdxs.splice(pos,1);
+  else {
+    if(mixSelectedIdxs.length>=4){ showToast('You can mix up to 4 colors at once'); return; }
+    mixSelectedIdxs.push(idx);
+  }
+  renderPaletteView(pal);
+}
+
 function renderSwatchView(pal,content){
   clearQ();
   // Sort bar HTML
@@ -2059,45 +2171,62 @@ function renderSwatchView(pal,content){
     <button class="sort-btn${palSortMode==='lf'?' active':''}" onclick="setPalSort('lf','${pal.id}')">⭐ <span class="sb-by">By </span><span class="sb-long">Lightfastness</span><span class="sb-short">LF</span></button>
     <button class="sort-btn${palSortMode==='brand'?' active':''}" onclick="setPalSort('brand','${pal.id}')">🏷 <span class="sb-by">By </span>Brand</button>
     <button class="sort-btn${palSortMode==='transparency'?' active':''}" onclick="setPalSort('transparency','${pal.id}')">◐ <span class="sb-by">By </span>Opacity</button>
-    <span class="sort-label">${pal.colors.length} colors${palSortMode==='custom'?' · drag ⠿ to reorder':''}</span>
+    <button class="sort-btn mix-toggle-btn${mixModeActive?' active':''}" onclick="toggleMixMode('${pal.id}')">🧪 ${mixModeActive?'Cancel Mixing':'Mix Colors'}</button>
+    <span class="sort-label">${pal.colors.length} colors${palSortMode==='custom'&&!mixModeActive?' · drag ⠿ to reorder':''}${mixModeActive?' · tap swatches to select':''}</span>
   </div>`;
 
   const sorted=getSortedColors(pal);
-  const grid=`<div class="swatch-grid" id="sg_${pal.id}">${
-    sorted.map((c,i)=>{
-      const realIdx=pal.colors.findIndex(x=>x===c);
-      const note=c.note||'';
-      const photoKey=`swatchphoto_${pal.id}_${realIdx}`;
-      const hasPhoto=!!c.photo;
-      const showPhoto=hasPhoto&&(c.photoVisible!==false);
-      return `<div class="sg-card" draggable="false" data-idx="${realIdx}" data-palid="${pal.id}">
-        ${palSortMode==='custom'?`<button class="sg-handle" title="Drag to reorder" aria-label="Drag to reorder">⠿</button>`:''}
+  const customColors=sorted.filter(c=>c.custom);
+  const paintColors=sorted.filter(c=>!c.custom);
+
+  function cardHtml(c){
+    const realIdx=pal.colors.findIndex(x=>x===c);
+    const note=c.note||'';
+    const hasPhoto=!!c.photo;
+    const showPhoto=hasPhoto&&(c.photoVisible!==false);
+    const isSelected=mixModeActive&&mixSelectedIdxs.includes(realIdx);
+    const selectOverlay=mixModeActive?`<button class="sg-mix-select${isSelected?' checked':''}" onclick="toggleMixSelect('${pal.id}',${realIdx})" title="Select for mixing">${isSelected?'✓':''}</button>`:'';
+    const clickToSelect=mixModeActive?` onclick="toggleMixSelect('${pal.id}',${realIdx})"`:'';
+    return `<div class="sg-card${c.custom?' sg-custom':''}${isSelected?' sg-selected-for-mix':''}" draggable="false" data-idx="${realIdx}" data-palid="${pal.id}"${clickToSelect}>
+        ${(palSortMode==='custom'&&!mixModeActive&&!c.custom)?`<button class="sg-handle" title="Drag to reorder" aria-label="Drag to reorder">⠿</button>`:''}
+        ${selectOverlay}
         <div class="sg-swatch" style="background:${c.hex};">
           <canvas id="sgc_${pal.id}_${realIdx}" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;${showPhoto?'opacity:0;':''}"></canvas>
           <div class="sg-photo${showPhoto?' visible':''}" id="sgp_${pal.id}_${realIdx}" style="${c.photo?'background-image:url('+c.photo+');':''}"></div>
-          <button class="sg-del" onclick="removeFromPalette('${pal.id}',${realIdx})">✕</button>
+          ${!mixModeActive?`<button class="sg-del" onclick="removeFromPalette('${pal.id}',${realIdx})">✕</button>
           <button class="sg-cam" title="${hasPhoto?'Replace or remove photo':'Attach photo'}" onclick="swatchCamAction('${pal.id}',${realIdx},${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
-          <button class="sg-photo-toggle${hasPhoto?' has-photo':''}" id="sgt_${pal.id}_${realIdx}" onclick="toggleSwatchPhoto('${pal.id}',${realIdx})" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>
+          <button class="sg-photo-toggle${hasPhoto?' has-photo':''}" id="sgt_${pal.id}_${realIdx}" onclick="toggleSwatchPhoto('${pal.id}',${realIdx})" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>`:''}
+          ${c.custom?'<span class="sg-custom-badge" title="Custom mixed color">🧪 Mixed</span>':''}
         </div>
         <div class="sg-body">
           <div class="sg-name">${c.name}</div>
-          <div class="sg-pig">${c.pigment}</div>
+          <div class="sg-pig">${c.custom?(c.mixedFrom||[]).join(' + '):c.pigment}</div>
           <div class="sg-meta">
-            <span class="lbadge lf-${c.lf}">${c.lf}</span>
-            <span class="sg-brand">${BRAND_LABELS[c.brand]||c.brand}</span>
+            ${c.custom?'':`<span class="lbadge lf-${c.lf}">${c.lf}</span>`}
+            <span class="sg-brand">${c.custom?'Custom mix':(BRAND_LABELS[c.brand]||c.brand)}</span>
           </div>
         </div>
-        <div class="sg-note-wrap">
+        ${!mixModeActive?`<div class="sg-note-wrap">
           <input class="sg-note-input" type="text" placeholder="Add a note…" value="${note.replace(/"/g,'&quot;')}" 
             onchange="saveColorNote('${pal.id}',${realIdx},this.value)"
             onfocus="this.parentElement.parentElement.setAttribute('draggable','false')"
-            onblur="this.parentElement.parentElement.setAttribute('draggable','${palSortMode==='custom'?'true':'false'}')">
-        </div>
+            onblur="this.parentElement.parentElement.setAttribute('draggable','${(palSortMode==='custom'&&!mixModeActive)?'true':'false'}')">
+        </div>`:''}
       </div>`;
-    }).join('')
-  }</div>`;
-  content.innerHTML=sortBar+grid;
-  initDragDrop(pal);
+  }
+
+  let gridsHtml='';
+  if(customColors.length){
+    gridsHtml+=`<div class="sg-section-label">🧪 Custom Mixes</div><div class="swatch-grid sg-custom-grid">${customColors.map(cardHtml).join('')}</div>`;
+    if(paintColors.length) gridsHtml+=`<div class="sg-section-label">Paints</div>`;
+  }
+  gridsHtml+=`<div class="swatch-grid" id="sg_${pal.id}">${paintColors.map(cardHtml).join('')}</div>`;
+
+  // Floating mix preview bar — shown only while 2+ swatches are selected
+  const mixBarHtml=mixModeActive?renderMixBarHtml(pal):'';
+
+  content.innerHTML=sortBar+gridsHtml+mixBarHtml;
+  if(!mixModeActive) initDragDrop(pal);
 
   // Queue canvas renders via IntersectionObserver
   if(window._sgIO) window._sgIO.disconnect();
@@ -2119,11 +2248,72 @@ function renderSwatchView(pal,content){
   },{rootMargin:'200px'});
 
   // Observe all canvas elements in the grid regardless of sort order
-  const sgGrid=document.getElementById('sg_'+pal.id);
-  if(sgGrid){
-    sgGrid.querySelectorAll('canvas[id^="sgc_"]').forEach(cv=>io.observe(cv));
-  }
+  content.querySelectorAll('canvas[id^="sgc_"]').forEach(cv=>io.observe(cv));
   window._sgIO=io;
+}
+
+// ── COLOR MIXING ─────────────────────────────────────────────
+function renderMixBarHtml(pal){
+  const sel=mixSelectedIdxs.map(i=>pal.colors[i]).filter(Boolean);
+  if(sel.length<2){
+    return `<div class="mix-bar" id="mix-bar">
+      <div class="mix-bar-hint">Select 2–4 swatches above to preview a mix.</div>
+    </div>`;
+  }
+  const equalW=sel.map(()=>1);
+  const mixedHex=mixPaintN(sel.map((c,i)=>({hex:c.hex,w:equalW[i]})));
+  const chipHtml=sel.map((c,i)=>`<div class="mix-chip" style="background:${c.hex};" title="${c.name}"></div>`).join('');
+  return `<div class="mix-bar" id="mix-bar">
+    <div class="mix-bar-row">
+      <div class="mix-bar-chips">${chipHtml}</div>
+      <div class="mix-bar-plus">→</div>
+      <div class="mix-bar-result" style="background:${mixedHex};" title="${mixedHex}"></div>
+      <div class="mix-bar-actions">
+        <input type="text" id="mix-name-input" class="mix-name-input" placeholder="Name this mix…" maxlength="34">
+        <button class="mix-add-btn" onclick="confirmAddMix('${pal.id}')">+ Add to Palette</button>
+      </div>
+    </div>
+    <div class="mix-bar-names">${sel.map(c=>c.name).join(' + ')} <span class="mix-bar-hex">${mixedHex.toUpperCase()}</span></div>
+  </div>`;
+}
+
+function confirmAddMix(palId){
+  const pal=palettes.find(p=>p.id===palId);
+  if(!pal) return;
+  const sel=mixSelectedIdxs.map(i=>pal.colors[i]).filter(Boolean);
+  if(sel.length<2){ showToast('Select at least 2 colors to mix'); return; }
+  const equalW=sel.map(()=>1);
+  const mixedHex=mixPaintN(sel.map((c,i)=>({hex:c.hex,w:equalW[i]})));
+  const nameInput=document.getElementById('mix-name-input');
+  const customName=(nameInput&&nameInput.value.trim())||sel.map(c=>c.name.split(' ')[0]).join(' + ');
+  // Estimate transparency/granulation loosely from the parent paints so the
+  // rendered swatch still looks plausible (average lean toward the more opaque
+  // and more granulating of the sources — mixing rarely makes paint MORE transparent
+  // or removes granulation entirely).
+  const transRank={T:0,ST:1,O:2};
+  const transp=sel.reduce((worst,c)=>transRank[c.transparency]>transRank[worst]?c.transparency:worst,'T');
+  const gran=sel.some(c=>c.gran);
+  const newColor={
+    group:'Custom',
+    name:customName,
+    brand:'custom',
+    pigment:'',
+    hex:mixedHex,
+    lf:'',
+    transparency:transp,
+    gran:gran,
+    single:false,
+    grade:'',
+    notes:'',
+    custom:true,
+    mixedFrom:sel.map(c=>c.name)
+  };
+  pal.colors.push(newColor);
+  savePalettes(palettes);
+  mixModeActive=false;
+  mixSelectedIdxs=[];
+  renderPaletteList();
+  showToast(`"${customName}" added to palette`);
 }
 
 // ── COLOR WHEEL ──────────────────────────────────────────────
