@@ -135,6 +135,18 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .sg-card:hover .sg-photo-toggle{opacity:1;}
 @media(hover:none){.sg-photo-toggle.has-photo{opacity:0.8;}}
 .sg-file-input{display:none;}
+.sg-swatch[onclick]{cursor:pointer;}
+.sg-dilute-hint{
+  position:absolute;bottom:7px;right:7px;
+  pointer-events:none; /* decorative — the whole .sg-swatch area is already clickable */
+  background:rgba(0,0,0,0.28);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  border:none;color:white;border-radius:50%;
+  width:22px;height:22px;font-size:0.62rem;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.16s;z-index:2;
+}
+.sg-swatch:hover .sg-dilute-hint{opacity:0.85;}
+@media(hover:none){.sg-dilute-hint{opacity:0.55;}} /* quieter but present, since there's no hover to reveal it on touch */
 .sg-body{padding:0.55rem 0.6rem 0.6rem;}
 .sg-name{font-family:'IM Fell English',serif;font-size:0.78rem;line-height:1.25;margin-bottom:0.22rem;color:var(--ink);}
 .sg-pig{font-size:0.6rem;font-family:'Courier New',monospace;color:var(--ink3);letter-spacing:0.02em;}
@@ -316,6 +328,30 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--paper);padding:0.55rem 1.3rem;border-radius:var(--r-md);font-size:0.8rem;font-family:'Crimson Pro',serif;opacity:0;transition:all 0.22s;pointer-events:none;z-index:2000;border-left:3px solid var(--gold2);box-shadow:0 4px 20px rgba(28,26,22,0.22);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── DILUTION CONSISTENCY MODAL ── */
+.modal-dilution{width:min(520px,92vw);padding:1.4rem;}
+.dilution-modal-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.1rem;}
+.dilution-swatch-dot{width:44px;height:44px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,0.08);box-shadow:0 2px 8px var(--shadow2);}
+.dilution-modal-titles{flex:1;min-width:0;}
+.dilution-modal-titles h2{margin-bottom:0.15rem;}
+.dilution-color-meta{font-size:0.76rem;color:var(--ink3);font-style:italic;}
+.dilution-close-btn{background:none;border:1px solid var(--border);border-radius:50%;width:30px;height:30px;flex-shrink:0;color:var(--ink3);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all 0.13s;}
+.dilution-close-btn:hover{border-color:var(--rust);color:var(--rust);}
+.dilution-strip-wrap{position:relative;border-radius:var(--r-md);overflow:hidden;box-shadow:0 4px 16px var(--shadow2);border:1px solid var(--border);}
+.dilution-strip-wrap canvas{display:block;width:100%;height:120px;}
+.dilution-labels{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(0,0,0,0.06);}
+.dilution-label-cell{text-align:center;padding:0.5rem 0.3rem;background:var(--paper2);border-right:1px solid var(--border2);}
+.dilution-label-cell:last-child{border-right:none;}
+.dilution-label-name{font-family:'IM Fell English',serif;font-size:0.82rem;color:var(--ink);}
+.dilution-label-sub{font-size:0.62rem;color:var(--ink3);font-style:italic;margin-top:1px;}
+.dilution-note{font-size:0.74rem;color:var(--ink3);line-height:1.6;margin-top:1rem;}
+.dilution-note strong{color:var(--ink2);font-weight:600;}
+@media(max-width:480px){
+  .dilution-strip-wrap canvas{height:96px;}
+  .dilution-label-name{font-size:0.72rem;}
+  .dilution-label-sub{display:none;}
+}
 
 @media(max-width:600px){.ref-sidebar,.palettes-sidebar{display:none;}.topnav-brand{display:none;}}
 
@@ -1177,6 +1213,25 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   </div>
 </div>
 
+<!-- Dilution Consistency Modal -->
+<div class="modal-bg" id="modal-dilution" onclick="if(event.target===this)closeDilutionModal()">
+  <div class="modal modal-dilution">
+    <div class="dilution-modal-header">
+      <div class="dilution-swatch-dot" id="dilution-swatch-dot"></div>
+      <div class="dilution-modal-titles">
+        <h2 id="dilution-color-name">Color Name</h2>
+        <div class="dilution-color-meta" id="dilution-color-meta">Pigment · Brand</div>
+      </div>
+      <button class="dilution-close-btn" onclick="closeDilutionModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="dilution-strip-wrap">
+      <canvas id="dilution-strip-canvas"></canvas>
+      <div class="dilution-labels" id="dilution-labels"></div>
+    </div>
+    <p class="dilution-note">Mixing consistency, left to right: <strong>Cream</strong> (heavy body, straight from the pan) → <strong>Milk</strong> → <strong>Coffee</strong> → <strong>Tea</strong> (a light glaze, mostly water). This is a rendered approximation — actual results vary with paper, water hardness, and how the pigment itself behaves.</p>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1251,22 +1306,25 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
   const PW=Math.max(1,Math.round(W*dpr)), PH=Math.max(1,Math.round(H*dpr));
   canvas.width=PW; canvas.height=PH;
   const ctx=canvas.getContext('2d');
-  const[r,g,b]=parseHex(hex);
-  // Warm paper that shows through transparent washes (matches --paper #faf7f2)
-  const pR=250, pG=247, pB=242;
-  // How much paper bleeds through for each transparency rating
-  const baseTrans = transparency==='T' ? 0.16 : transparency==='ST' ? 0.07 : 0.01;
-  // Stable seed from hex so the same color always renders identically
-  let _hv=0; for(let _ci=0;_ci<hex.length;_ci++){ _hv=(_hv*31+hex.charCodeAt(_ci))&0xffffff; }
-  const ox=(_hv%200), oy=((_hv>>8)%200);
+  paintSwatchRegion(ctx, hex, gran, transparency, PW, PH, dpr, 0, 0, 1.0);
+}
 
-  // Pigment mass-tone reference (a darker, more saturated version of the paint's
-  // own hue) — granulation pushes toward THIS rather than toward black, so heavy
-  // pigment concentration reads as "more paint" instead of "a shadow on top".
+// Core "paint over paper" pixel model, factored out of renderSwatchCanvas so it
+// can be reused at arbitrary dilution strengths (see renderDilutionStrip below).
+// dilution: 1.0 = full-strength paint straight from the tube/pan (unchanged
+// behaviour). Lower values (down to ~0.08) simulate progressively more water
+// mixed in — less pigment film covering the paper, and granulation becomes
+// finer/fainter since there's less particulate matter suspended per stroke.
+// ox0/oy0 let a caller offset the noise field so adjacent strip segments don't
+// look like tiled copies of each other.
+function paintSwatchRegion(ctx, hex, gran, transparency, PW, PH, dpr, ox0, oy0, dilution){
+  const[r,g,b]=parseHex(hex);
+  const pR=250, pG=247, pB=242; // warm paper (matches --paper #faf7f2)
+  const baseTrans = transparency==='T' ? 0.16 : transparency==='ST' ? 0.07 : 0.01;
+  let _hv=0; for(let _ci=0;_ci<hex.length;_ci++){ _hv=(_hv*31+hex.charCodeAt(_ci))&0xffffff; }
+  const ox=ox0+(_hv%200), oy=oy0+((_hv>>8)%200);
+
   const maxC=Math.max(r,g,b), minC=Math.min(r,g,b);
-  const satRange=maxC-minC;
-  // Darken by lowering value while slightly boosting the existing saturation —
-  // mimics how a thicker film of the same pigment looks, not a neutral shadow.
   const massR = r - (r-minC)*0.12 - 38;
   const massG = g - (g-minC)*0.12 - 38;
   const massB = b - (b-minC)*0.12 - 38;
@@ -1274,59 +1332,49 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
   const imgData=ctx.createImageData(PW,PH); const dat=imgData.data;
   for(let py=0; py<PH; py++){
     const yy=py/PH;
-    const ny=py/dpr;                          // logical coord so noise scale is DPR-independent
+    const ny=py/dpr;
     for(let px=0; px<PW; px++){
       const xx=px/PW;
       const nx=px/dpr;
       const i=(py*PW+px)*4;
 
-      // — Shared paper-tooth field: ONE physical surface drives wash unevenness,
-      //   fine grain, AND granulation, so they correlate the way they do on real
-      //   cold-press paper instead of being three unrelated noise layers.
       const tooth = fbmAniso(ox+nx*0.30, oy+ny*0.30, 3, 1.4, 0.4);
-
-      // — Large-scale wash variation (unevenness like a brush stroke) — a
-      //   coarser, independent field since this comes from application, not paper
       const wash=fbm(ox+nx*0.045, oy+ny*0.045, 3);
-      // — Fine paper grain now reads FROM the shared tooth field
       const grain=tooth;
-      // — Edge pooling: pigment beads at the outer band (cauliflower effect)
       const dEdge=Math.min(Math.min(xx,1-xx), Math.min(yy,1-yy));
       const edgePool=Math.max(0, 1 - dEdge*5);
-      // — Gravity: bottom is slightly darker (paint settles downward)
       const gravity=Math.pow(yy, 1.6) * 0.28;
-      // — Density of the pigment film at this point (1.0 ≈ full masstone)
-      let density = 0.92 + (wash-0.5)*0.14 + edgePool*0.10 + gravity*0.09;
-      density = Math.max(0.45, Math.min(1.08, density));
-      // — Effective paper-through (more where the film is thinner)
+      // Base density curve (unchanged from the original full-strength model) —
+      // wash/edge/gravity are surface variation, not dilution, so they stay at
+      // full weight regardless of how watered-down the mix is; only the OVERALL
+      // pigment film thickness scales with dilution, applied as a separate
+      // multiplier below so Cream keeps full contrast instead of clipping.
+      let baseDensity = 0.92 + (wash-0.5)*0.14 + edgePool*0.10 + gravity*0.09;
+      baseDensity = Math.max(0.45, Math.min(1.08, baseDensity));
+      // Dilution acts as a pigment-load multiplier on top of the surface
+      // variation, with a gentle curve (sqrt) so mid-dilutions (Milk/Coffee)
+      // don't crash to near-invisible too quickly — matches how watercolor
+      // actually lightens (perceptually closer to log/sqrt than linear).
+      const loadCurve = Math.pow(dilution, 0.62);
+      const density = Math.max(0.02, baseDensity * loadCurve);
       const trans = baseTrans * (1.6 - density*0.6);
       const cover = Math.max(0, Math.min(1, density * (1 - trans)));
-      // — Blend pigment over paper
       let outR = r*cover + pR*(1-cover);
       let outG = g*cover + pG*(1-cover);
       let outB = b*cover + pB*(1-cover);
 
-      // — Granulation: bimodal — pigment concentrates in paper valleys (tooth low)
-      //   and is correspondingly thinner on paper peaks (tooth high). Real
-      //   granulation on cold-press paper shows organic, cloud-like mottled cells
-      //   (a few mm across) with crisp light/dark contrast — NOT fine uniform
-      //   speckling. Two scales are blended: broad mottled cells (dominant) plus
-      //   a finer texture riding on top for the "grainy" close-up feel.
       if(gran){
-        const cell   = fbmAniso(ox+nx*0.045, oy+ny*0.045, 3, 1.3, 0.5);  // broad mottled cells — dominant
-        const fine   = fbmAniso(ox+nx*0.30,  oy+ny*0.30,  2, 1.2, 1.1);  // fine grain riding on top
+        const cell   = fbmAniso(ox+nx*0.045, oy+ny*0.045, 3, 1.3, 0.5);
+        const fine   = fbmAniso(ox+nx*0.30,  oy+ny*0.30,  2, 1.2, 1.1);
         const particulate = cell*0.72 + fine*0.28;
+        // Granulation contrast follows the same load curve as density — full
+        // force at Cream, fading gracefully rather than being pre-suppressed.
+        const granAmt = 0.25 + loadCurve*0.75;
 
-        // Valleys (low particulate) → pigment pools → notably darker AND pushed
-        // toward mass-tone. Smoothstep-shaped falloff gives crisp cell edges
-        // instead of a soft gradient, matching how real granulation reads.
         const vRaw = Math.max(0, 0.52 - particulate) / 0.52;
-        const valleyStrength = vRaw*vRaw*(3-2*vRaw) * 0.95; // smoothstep, higher ceiling
-        // Peaks (high particulate) → pigment thinned/displaced → distinctly
-        // lighter, letting real paper through. This bimodal half is what makes
-        // granulation read as texture rather than dirty shading.
+        const valleyStrength = vRaw*vRaw*(3-2*vRaw) * 0.95 * granAmt;
         const pRaw = Math.max(0, particulate - 0.50) / 0.50;
-        const peakStrength = pRaw*pRaw*(3-2*pRaw) * 0.65;
+        const peakStrength = pRaw*pRaw*(3-2*pRaw) * 0.65 * granAmt;
 
         if(valleyStrength>0){
           outR = lerp(outR, massR, Math.min(0.92, valleyStrength));
@@ -1340,13 +1388,10 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
         }
       }
 
-      // — Tiny per-pixel grain shift (subtle paper texture, now correlated
-      //   with the same tooth field used for granulation)
       const gshift = (grain-0.5) * (gran?8:12);
       outR += gshift; outG += gshift; outB += gshift;
-      // — Wet sheen highlight (catches light in the upper-left)
       const sx=xx-0.22, sy=yy-0.18;
-      const sheen=Math.max(0, 1 - Math.sqrt(sx*sx+sy*sy)*3.5) * 11;
+      const sheen=Math.max(0, 1 - Math.sqrt(sx*sx+sy*sy)*3.5) * 11 * loadCurve;
       outR += sheen; outG += sheen; outB += sheen;
       dat[i]   = Math.min(255, Math.max(0, outR));
       dat[i+1] = Math.min(255, Math.max(0, outG));
@@ -1355,6 +1400,44 @@ function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
     }
   }
   ctx.putImageData(imgData,0,0);
+}
+
+// ── DILUTION / CONSISTENCY STRIP ──────────────────────────────
+// Renders 4 side-by-side panels showing the classic watercolor teaching
+// analogy: Cream (tube-strength), Milk, Coffee, Tea (progressively more
+// water). Each panel is painted independently at its own dilution using the
+// same physical model as the main swatch, so it stays visually consistent
+// with the rest of the app rather than being a flat CSS gradient.
+const DILUTION_STOPS = [
+  {label:'Cream', sub:'heavy body', d:1.00},
+  {label:'Milk',  sub:'medium',     d:0.55},
+  {label:'Coffee',sub:'light wash', d:0.28},
+  {label:'Tea',   sub:'glaze',      d:0.12},
+];
+function renderDilutionStrip(canvas, hex, gran, transparency, W, H){
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  const PW=Math.max(1,Math.round(W*dpr)), PH=Math.max(1,Math.round(H*dpr));
+  canvas.width=PW; canvas.height=PH;
+  const ctx=canvas.getContext('2d');
+  const n=DILUTION_STOPS.length;
+  const segPW=Math.floor(PW/n);
+  let xCursor=0;
+  DILUTION_STOPS.forEach((stop,i)=>{
+    // Last segment absorbs any rounding remainder so there's no unpainted
+    // sliver of paper-colored gap on the right edge at odd canvas widths.
+    const thisSegW = (i===n-1) ? (PW-xCursor) : segPW;
+    // Off-screen buffer per segment so putImageData doesn't have to address
+    // the full canvas with an x-offset (ImageData is always drawn at 0,0).
+    const segCanvas=document.createElement('canvas');
+    segCanvas.width=thisSegW; segCanvas.height=PH;
+    const segCtx=segCanvas.getContext('2d');
+    // Offset the noise field per segment (by a large prime-ish step) so the
+    // four panels don't look like the same texture repeated—each reads as an
+    // independently mixed puddle, which is how you'd actually test consistency.
+    paintSwatchRegion(segCtx, hex, gran, transparency, thisSegW, PH, dpr, i*137, i*59, stop.d);
+    ctx.drawImage(segCanvas, xCursor, 0);
+    xCursor += thisSegW;
+  });
 }
 
 function renderTranspCanvas(canvas,hex,transparency,W,H){
@@ -2172,7 +2255,7 @@ function renderSwatchView(pal,content){
     <button class="sort-btn${palSortMode==='brand'?' active':''}" onclick="setPalSort('brand','${pal.id}')">🏷 <span class="sb-by">By </span>Brand</button>
     <button class="sort-btn${palSortMode==='transparency'?' active':''}" onclick="setPalSort('transparency','${pal.id}')">◐ <span class="sb-by">By </span>Opacity</button>
     <button class="sort-btn mix-toggle-btn${mixModeActive?' active':''}" onclick="toggleMixMode('${pal.id}')">🧪 ${mixModeActive?'Cancel Mixing':'Mix Colors'}</button>
-    <span class="sort-label">${pal.colors.length} colors${palSortMode==='custom'&&!mixModeActive?' · drag ⠿ to reorder':''}${mixModeActive?' · tap swatches to select':''}</span>
+    <span class="sort-label">${pal.colors.length} colors${palSortMode==='custom'&&!mixModeActive?' · drag ⠿ to reorder':''}${mixModeActive?' · tap swatches to select':''}${!mixModeActive?' · tap a swatch for dilution guide':''}</span>
   </div>`;
 
   const sorted=getSortedColors(pal);
@@ -2190,12 +2273,13 @@ function renderSwatchView(pal,content){
     return `<div class="sg-card${c.custom?' sg-custom':''}${isSelected?' sg-selected-for-mix':''}" draggable="false" data-idx="${realIdx}" data-palid="${pal.id}"${clickToSelect}>
         ${(palSortMode==='custom'&&!mixModeActive&&!c.custom)?`<button class="sg-handle" title="Drag to reorder" aria-label="Drag to reorder">⠿</button>`:''}
         ${selectOverlay}
-        <div class="sg-swatch" style="background:${c.hex};">
+        <div class="sg-swatch"${mixModeActive?'':` onclick="openDilutionModal('${pal.id}',${realIdx})" title="Tap to see dilution consistency"`} style="background:${c.hex};">
           <canvas id="sgc_${pal.id}_${realIdx}" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;${showPhoto?'opacity:0;':''}"></canvas>
           <div class="sg-photo${showPhoto?' visible':''}" id="sgp_${pal.id}_${realIdx}" style="${c.photo?'background-image:url('+c.photo+');':''}"></div>
-          ${!mixModeActive?`<button class="sg-del" onclick="removeFromPalette('${pal.id}',${realIdx})">✕</button>
-          <button class="sg-cam" title="${hasPhoto?'Replace or remove photo':'Attach photo'}" onclick="swatchCamAction('${pal.id}',${realIdx},${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
-          <button class="sg-photo-toggle${hasPhoto?' has-photo':''}" id="sgt_${pal.id}_${realIdx}" onclick="toggleSwatchPhoto('${pal.id}',${realIdx})" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>`:''}
+          ${!mixModeActive?`<button class="sg-del" onclick="event.stopPropagation();removeFromPalette('${pal.id}',${realIdx})">✕</button>
+          <button class="sg-cam" title="${hasPhoto?'Replace or remove photo':'Attach photo'}" onclick="event.stopPropagation();swatchCamAction('${pal.id}',${realIdx},${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
+          <button class="sg-photo-toggle${hasPhoto?' has-photo':''}" id="sgt_${pal.id}_${realIdx}" onclick="event.stopPropagation();toggleSwatchPhoto('${pal.id}',${realIdx})" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>
+          <button class="sg-dilute-hint" title="Tap swatch to see dilution consistency">💧</button>`:''}
           ${c.custom?'<span class="sg-custom-badge" title="Custom mixed color">🧪 Mixed</span>':''}
         </div>
         <div class="sg-body">
@@ -2534,6 +2618,44 @@ function duplicatePalette(e,id){
   renderPaletteList();
   showToast(`"${p.name}" duplicated`);
 }
+
+// ── DILUTION CONSISTENCY MODAL ───────────────────────────────
+function openDilutionModal(palId, idx){
+  const pal=palettes.find(p=>p.id===palId);
+  if(!pal) return;
+  const c=pal.colors[idx];
+  if(!c) return;
+
+  document.getElementById('dilution-color-name').textContent=c.name;
+  document.getElementById('dilution-color-meta').textContent = c.custom
+    ? 'Custom mix · '+(c.mixedFrom||[]).join(' + ')
+    : (c.pigment?c.pigment+' · ':'')+(BRAND_LABELS[c.brand]||c.brand);
+  document.getElementById('dilution-swatch-dot').style.background=c.hex;
+
+  const labelsWrap=document.getElementById('dilution-labels');
+  labelsWrap.innerHTML=DILUTION_STOPS.map(s=>
+    `<div class="dilution-label-cell"><div class="dilution-label-name">${s.label}</div><div class="dilution-label-sub">${s.sub}</div></div>`
+  ).join('');
+
+  const modal=document.getElementById('modal-dilution');
+  modal.classList.add('open');
+
+  // Render after the modal is visible so canvas.offsetWidth is measurable
+  requestAnimationFrame(()=>{
+    const cv=document.getElementById('dilution-strip-canvas');
+    const W=cv.parentElement.offsetWidth||480, H=120;
+    renderDilutionStrip(cv, c.hex, c.gran, c.transparency, W, H);
+  });
+}
+function closeDilutionModal(){
+  document.getElementById('modal-dilution').classList.remove('open');
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    const m=document.getElementById('modal-dilution');
+    if(m&&m.classList.contains('open')) closeDilutionModal();
+  }
+});
 
 function deletePalette(e,id){
   e.stopPropagation();
