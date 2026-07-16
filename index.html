@@ -86,6 +86,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .palette-main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;}
 .palette-header{padding:0.85rem 1.25rem 0.65rem;border-bottom:1px solid var(--border2);background:var(--paper);display:flex;align-items:center;gap:0.8rem;flex-shrink:0;}
 .palette-mobile-switcher{display:none;}
+.ref-mobile-switcher{display:none;}
 .palette-name-input{font-family:'IM Fell English',serif;font-size:1.1rem;border:none;background:transparent;color:var(--ink);outline:none;flex:1;min-width:140px;border-bottom:1.5px solid transparent;transition:border-color 0.15s;padding-bottom:1px;}
 .palette-name-input:focus{border-bottom-color:var(--gold);}
 .palette-header-row2{padding:0 1.25rem 0.7rem;border-bottom:1px solid var(--border);background:var(--paper);flex-shrink:0;}
@@ -578,8 +579,19 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   /* soft fade on the right edge of the scroll bar so the bar doesn't cut off harshly */
   .palette-sort-bar{position:relative;}
   .palette-sort-bar::after{content:'';position:absolute;right:0;top:0;bottom:0;width:24px;background:linear-gradient(to right, rgba(243,237,227,0), var(--paper2));pointer-events:none;}
-  .ref-controls{padding:0.6rem 0.9rem;gap:0.5rem;}
+  .ref-controls{padding:0.6rem 0.9rem;gap:0.5rem;flex-wrap:wrap;}
+  .ref-mobile-switcher{
+    display:block;width:100%;order:0;
+    font-family:'Crimson Pro',serif;font-size:16px;
+    padding:0.55rem 0.7rem;border:1px solid var(--border);
+    border-radius:var(--r-sm);background:var(--paper2);color:var(--ink);
+    -webkit-appearance:none;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a7660'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 0.8rem center;
+  }
+  .ref-search-wrap{order:1;width:100%;}
   .ref-search-wrap input{font-size:16px!important;padding:0.5rem 0.85rem 0.5rem 2rem;}
+  .ref-filters{order:2;width:100%;}
   .tr-pip{width:22px;height:22px;}
   .tracker-row{padding:0.65rem 0.75rem;gap:0.5rem;}
   .recipes-grid{grid-template-columns:1fr;}
@@ -1109,7 +1121,32 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
     </aside>
     <div class="ref-main">
       <div class="ref-controls">
-        <button class="filt-btn" id="ref-filter-btn" onclick="toggleMobileSidebar()" style="display:none;flex-shrink:0;">⚙ Brands</button>
+        <select class="ref-mobile-switcher" id="ref-mobile-switcher" onchange="setRefFromDropdown(this.value)" aria-label="Filter by brand or color group">
+          <optgroup label="Brands">
+            <option value="brand:all" selected>All Brands</option>
+            <option value="brand:daniel-smith">Daniel Smith</option>
+            <option value="brand:winsor-newton">Winsor &amp; Newton</option>
+            <option value="brand:schmincke">Schmincke</option>
+            <option value="brand:holbein">Holbein</option>
+            <option value="brand:sennelier">Sennelier</option>
+            <option value="brand:mgraham">M. Graham</option>
+            <option value="brand:qor">QoR</option>
+            <option value="brand:blockx">Blockx</option>
+            <option value="brand:mijello">Mijello Mission Gold</option>
+            <option value="brand:utrecht">Utrecht</option>
+            <option value="brand:schpirerr-farben">Schpirerr Farben</option>
+          </optgroup>
+          <optgroup label="Color Groups">
+            <option value="group:Yellows">Yellows &amp; Golds</option>
+            <option value="group:Oranges">Oranges</option>
+            <option value="group:Reds">Reds &amp; Pinks</option>
+            <option value="group:Blues">Blues</option>
+            <option value="group:Purples">Purples &amp; Violets</option>
+            <option value="group:Greens">Greens</option>
+            <option value="group:Neutrals">Browns &amp; Neutrals</option>
+            <option value="group:Blacks">Blacks &amp; Greys</option>
+          </optgroup>
+        </select>
         <div class="ref-search-wrap">
           <span class="si">🔍</span>
           <input type="text" id="ref-search" placeholder="Search color or pigment…" oninput="debouncedRenderRef()">
@@ -2160,6 +2197,10 @@ function renderPaletteList(){
 function selectPalette(id){
   activePaletteId=id;
   palSortMode='custom';
+  // Mix Colors selection indices are only meaningful within the palette they
+  // were selected from — carrying them into a different palette would select
+  // the wrong swatches (or mix the wrong colors) since indices don't line up.
+  resetMixModeState();
   renderPaletteList();
   if(isMobile()) setTimeout(closeSidebars,80);
 }
@@ -2225,6 +2266,15 @@ function renderPaletteView(pal){
 // ── SWATCH GRID ──────────────────────────────────────────────
 var mixModeActive=false;      // whether "Mix Colors" selection mode is on
 var mixSelectedIdxs=[];       // real indices (into pal.colors) currently selected for mixing
+
+// Mix-selection indices are only valid for the palette they were chosen from.
+// Call this any time the active palette changes (switching, duplicating,
+// deleting, loading a starter palette, or restoring a backup) so a stale
+// selection can't silently point at the wrong swatches in a different palette.
+function resetMixModeState(){
+  mixModeActive=false;
+  mixSelectedIdxs=[];
+}
 
 function toggleMixMode(palId){
   mixModeActive=!mixModeActive;
@@ -2394,8 +2444,7 @@ function confirmAddMix(palId){
   };
   pal.colors.push(newColor);
   savePalettes(palettes);
-  mixModeActive=false;
-  mixSelectedIdxs=[];
+  resetMixModeState();
   renderPaletteList();
   showToast(`"${customName}" added to palette`);
 }
@@ -2592,6 +2641,7 @@ function createPalette(){
   palettes.push(pal);
   savePalettes(palettes);
   activePaletteId=pal.id;
+  resetMixModeState();
   closeModal('modal-new');
   renderPaletteList();
   showToast(`"${name}" created`);
@@ -2615,6 +2665,7 @@ function duplicatePalette(e,id){
   palettes.push(copy);
   savePalettes(palettes);
   activePaletteId=copy.id;
+  resetMixModeState();
   renderPaletteList();
   showToast(`"${p.name}" duplicated`);
 }
@@ -2662,6 +2713,7 @@ function deletePalette(e,id){
   if(!confirm('Delete this palette?')) return;
   palettes=palettes.filter(p=>p.id!==id);
   if(activePaletteId===id) activePaletteId=palettes.length?palettes[0].id:null;
+  resetMixModeState();
   savePalettes(palettes);
   renderPaletteList();
   showToast('Palette deleted');
@@ -2703,10 +2755,35 @@ document.querySelectorAll('.rsb-btn').forEach(btn=>{
     const brand=this.dataset.brand,group=this.dataset.group;
     if(brand){refBrand=brand;refGroup=null;}
     if(group){refGroup=group;refBrand='all';}
+    syncRefMobileSwitcher();
     renderRef();
     if(isMobile()) setTimeout(closeSidebars,80);
   });
 });
+
+// Mobile brand/group dropdown — mirrors the sidebar's filter state so users
+// don't need to open the (desktop-only) sidebar or rotate to landscape to
+// pick a brand. Keeps a single source of truth (refBrand/refGroup) shared
+// with the sidebar buttons rather than duplicating filter logic.
+function setRefFromDropdown(value){
+  const [kind,val]=value.split(':');
+  if(kind==='brand'){ refBrand=val; refGroup=null; }
+  else if(kind==='group'){ refGroup=val; refBrand='all'; }
+  // Keep the desktop sidebar's active state in sync too, in case the window
+  // is resized from mobile to desktop width without a page reload.
+  document.querySelectorAll('.rsb-btn').forEach(b=>{
+    const match=(kind==='brand'&&b.dataset.brand===val)||(kind==='group'&&b.dataset.group===val);
+    b.classList.toggle('active', match);
+  });
+  renderRef();
+}
+// Reflects the current refBrand/refGroup state back into the <select> —
+// called whenever the sidebar buttons change state so both controls agree.
+function syncRefMobileSwitcher(){
+  const sel=document.getElementById('ref-mobile-switcher');
+  if(!sel) return;
+  sel.value = refGroup ? ('group:'+refGroup) : ('brand:'+refBrand);
+}
 
 function setRefLF(btn,lf){
   refLF=lf;
@@ -3051,6 +3128,7 @@ function loadRecommendedPalette(idx){
   palettes.push(pal);
   savePalettes(palettes);
   activePaletteId=pal.id;
+  resetMixModeState();
   const firstTab=document.querySelector('.nav-tab:first-child');
   showPage('palettes', firstTab);
   renderPaletteList();
@@ -4011,7 +4089,8 @@ function applyImport(text){
   if(!confirm('Restore '+summary.join(', ')+'?\n\nThis replaces the matching data currently in this browser. (Your other data is left as-is.)')) return;
 
   if(newPalettes){ palettes=newPalettes; savePalettes(palettes);
-    activePaletteId = palettes.length ? palettes[0].id : null; }
+    activePaletteId = palettes.length ? palettes[0].id : null;
+    resetMixModeState(); }
   if(newTubes){ tubeData=newTubes; saveTubeData(tubeData); }
   if(newShopping){ shoppingList=newShopping; saveShoppingList(shoppingList); }
 
