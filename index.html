@@ -891,18 +891,64 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .vs-page::-webkit-scrollbar{width:4px;}
 .vs-page::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
-/* ── Empty state ── */
-.vs-empty{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:3rem 1.5rem;gap:0.85rem;max-width:440px;margin:0 auto;
+/* ── Reference section (always visible) ── */
+.vs-ref-section{padding:1.5rem 1.5rem 1rem;max-width:960px;margin:0 auto;width:100%;}
+.vs-ref-header h1{font-family:'IM Fell English',serif;font-size:1.7rem;color:var(--ink);font-weight:400;margin-bottom:0.5rem;}
+.vs-ref-header p{font-size:0.86rem;color:var(--ink2);line-height:1.65;max-width:680px;margin-bottom:1.6rem;}
+
+.vs-ref-block{margin-bottom:1.8rem;}
+.vs-ref-block-title{font-family:'IM Fell English',serif;font-size:1.15rem;color:var(--ink);font-weight:400;margin-bottom:0.3rem;}
+.vs-ref-block-sub{font-size:0.8rem;color:var(--ink3);line-height:1.55;margin-bottom:0.85rem;max-width:640px;}
+
+.vs-scale-chart{
+  display:flex;border-radius:var(--r-md);overflow:hidden;
+  box-shadow:0 4px 16px var(--shadow2);border:1px solid var(--border);
 }
-.vs-empty-icon{font-size:3rem;color:var(--gold2);opacity:0.7;line-height:1;}
-.vs-empty h2{font-family:'IM Fell English',serif;font-size:1.5rem;color:var(--ink);font-weight:400;}
-.vs-empty p{font-size:0.85rem;color:var(--ink2);line-height:1.6;}
+.vs-scale-cell{
+  flex:1;min-height:88px;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-end;padding-bottom:0.5rem;
+  position:relative;transition:flex 0.18s;
+}
+.vs-scale-cell:hover{flex:1.5;}
+.vs-scale-cell-label{font-size:0.62rem;text-align:center;line-height:1.25;padding:0 3px;opacity:0.85;margin-bottom:2px;}
+.vs-scale-cell-num{font-family:'IM Fell English',serif;font-size:1.1rem;font-weight:400;}
+
+.vs-ref-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.8rem;}
+.vs-ref-card{
+  background:white;border:1px solid var(--border);border-radius:var(--r-md);
+  padding:0.9rem 1rem;box-shadow:0 2px 8px var(--shadow);
+}
+.vs-ref-card-icon{font-size:1.3rem;margin-bottom:0.4rem;line-height:1;}
+.vs-ref-card-title{font-family:'IM Fell English',serif;font-size:0.92rem;color:var(--ink);margin-bottom:0.35rem;}
+.vs-ref-card-body{font-size:0.76rem;color:var(--ink2);line-height:1.55;}
+
+.vs-mistake-list{display:flex;flex-direction:column;gap:0.6rem;}
+.vs-mistake-row{
+  display:flex;gap:0.6rem;align-items:flex-start;
+  background:white;border:1px solid var(--border);border-radius:var(--r-md);
+  padding:0.7rem 0.9rem;box-shadow:0 2px 6px var(--shadow);
+  font-size:0.8rem;color:var(--ink2);line-height:1.55;
+}
+.vs-mistake-x{color:var(--rust);font-weight:700;font-size:0.85rem;flex-shrink:0;margin-top:1px;}
+.vs-mistake-row b{color:var(--ink);font-weight:600;}
+
+/* ── Photo tool section ── */
+.vs-tool-section{border-top:1px solid var(--border);background:var(--paper2);padding:1.5rem;flex:1;display:flex;flex-direction:column;min-height:520px;}
+.vs-tool-header{max-width:960px;margin:0 auto;width:100%;margin-bottom:1rem;}
+.vs-tool-header h2{font-family:'IM Fell English',serif;font-size:1.25rem;color:var(--ink);font-weight:400;margin-bottom:0.3rem;}
+.vs-tool-header p{font-size:0.82rem;color:var(--ink2);line-height:1.55;}
+
+/* ── Empty state (inside the tool section) ── */
+.vs-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:2.2rem 1.5rem;gap:0.7rem;max-width:440px;margin:0 auto;
+  background:white;border:1px dashed var(--border);border-radius:var(--r-lg);
+}
+.vs-empty-icon{font-size:2.4rem;color:var(--gold2);opacity:0.7;line-height:1;}
 .vs-upload-btn{
-  margin-top:0.4rem;background:var(--ink);color:var(--gold2);border:none;
-  padding:0.75rem 1.5rem;border-radius:var(--r-md);
-  font-family:'Crimson Pro',serif;font-size:0.92rem;font-weight:600;
+  margin-top:0.2rem;background:var(--ink);color:var(--gold2);border:none;
+  padding:0.7rem 1.4rem;border-radius:var(--r-md);
+  font-family:'Crimson Pro',serif;font-size:0.9rem;font-weight:600;
   cursor:pointer;transition:background 0.15s,transform 0.15s;
   box-shadow:0 4px 14px var(--shadow2);
 }
@@ -1013,17 +1059,26 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .vs-main{flex-direction:column;overflow-y:auto;overflow-x:hidden;}
   .vs-canvas-wrap{min-height:280px;flex:none;height:min(60vw,380px);}
   .vs-side-panel{width:100%;overflow:visible;}
+  .vs-ref-grid{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:700px){
   .vs-toolbar{padding:0.6rem 0.85rem;gap:0.7rem;}
   .vs-toolbar-spacer{display:none;}
   .vs-toolbar-btn{flex:1;text-align:center;}
   .vs-main{padding:0.75rem;gap:0.75rem;}
-  .vs-empty{padding:2.5rem 1.2rem;}
+  .vs-empty{padding:1.8rem 1.2rem;}
   .vs-canvas-hint{font-size:0.62rem;padding:4px 10px;}
+  .vs-ref-section{padding:1.1rem 1rem 0.5rem;}
+  .vs-ref-header h1{font-size:1.4rem;}
+  .vs-ref-grid{grid-template-columns:1fr;}
+  .vs-scale-cell{min-height:64px;}
+  .vs-scale-cell-label{font-size:0.54rem;}
+  .vs-scale-cell-num{font-size:0.92rem;}
+  .vs-tool-section{padding:1.1rem;min-height:420px;}
 }
 </style>
 </head>
+
 <body>
 
 <!-- TOP NAV -->
@@ -1235,69 +1290,132 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   <div class="page" id="page-valuestudy">
     <div class="vs-page">
 
-      <!-- Empty state: no photo loaded yet -->
-      <div class="vs-empty" id="vs-empty">
-        <div class="vs-empty-icon">◑</div>
-        <h2>Value Study</h2>
-        <p>Upload a reference photo to see it broken into clean value zones — the single most useful thing to nail before you touch a brush to paper.</p>
-        <button class="vs-upload-btn" onclick="triggerValueStudyUpload()">📷 Upload a Reference Photo</button>
-        <div class="vs-empty-hint">Works best with landscape or still-life photos with clear light and shadow.</div>
-      </div>
-
-      <!-- Working state: photo loaded -->
-      <div class="vs-workspace" id="vs-workspace" style="display:none;">
-        <div class="vs-toolbar">
-          <div class="vs-toolbar-group">
-            <span class="vs-toolbar-label">Zones</span>
-            <div class="vs-zone-btns" id="vs-zone-btns">
-              <button class="vs-zone-btn" data-n="3" onclick="setValueStudyZones(3)">3</button>
-              <button class="vs-zone-btn" data-n="4" onclick="setValueStudyZones(4)">4</button>
-              <button class="vs-zone-btn active" data-n="5" onclick="setValueStudyZones(5)">5</button>
-              <button class="vs-zone-btn" data-n="7" onclick="setValueStudyZones(7)">7</button>
-              <button class="vs-zone-btn" data-n="9" onclick="setValueStudyZones(9)">9</button>
-            </div>
-          </div>
-          <div class="vs-toolbar-group">
-            <span class="vs-toolbar-label">View</span>
-            <div class="vs-view-btns">
-              <button class="vs-view-btn active" data-view="split" onclick="setValueStudyView('split')">Split</button>
-              <button class="vs-view-btn" data-view="posterized" onclick="setValueStudyView('posterized')">Study Only</button>
-              <button class="vs-view-btn" data-view="original" onclick="setValueStudyView('original')">Photo Only</button>
-            </div>
-          </div>
-          <div class="vs-toolbar-spacer"></div>
-          <button class="vs-toolbar-btn" onclick="triggerValueStudyUpload()">🔄 New Photo</button>
-          <button class="vs-toolbar-btn" onclick="downloadValueStudy()">⬇ Save Image</button>
+      <!-- ══ REFERENCE SECTION — always visible, no photo required ══ -->
+      <div class="vs-ref-section">
+        <div class="vs-ref-header">
+          <h1>Value Study</h1>
+          <p>Value — how light or dark something is — matters more to a convincing painting than color choice. A painting with the wrong colors but right values reads correctly from across a room; a painting with perfect colors but muddled values falls apart. This page is your at-a-glance reference, plus a tool below for analyzing your own photos.</p>
         </div>
 
-        <div class="vs-main">
-          <div class="vs-canvas-wrap" id="vs-canvas-wrap">
-            <canvas id="vs-canvas-original"></canvas>
-            <canvas id="vs-canvas-posterized"></canvas>
-            <div class="vs-split-handle" id="vs-split-handle"></div>
-            <div class="vs-sample-marker" id="vs-sample-marker" style="display:none;"></div>
-            <div class="vs-canvas-hint" id="vs-canvas-hint">Tap anywhere on the photo to sample a value</div>
+        <div class="vs-ref-block">
+          <div class="vs-ref-block-title">The 9-Step Value Scale</div>
+          <div class="vs-ref-block-sub">The standard scale artists use to talk about value, from Light Light (1) to Dark Dark (9). Squint at your subject and try to place what you see on this scale before mixing.</div>
+          <div class="vs-scale-chart" id="vs-scale-chart"></div>
+        </div>
+
+        <div class="vs-ref-grid">
+          <div class="vs-ref-card">
+            <div class="vs-ref-card-icon">🌫️</div>
+            <div class="vs-ref-card-title">The Squint Test</div>
+            <div class="vs-ref-card-body">Squint hard at your subject (or a photo of it) until detail and color blur away. What's left is pure value — the light and dark shape relationships that actually hold a painting together. Do this before you mix a single wash.</div>
+          </div>
+          <div class="vs-ref-card">
+            <div class="vs-ref-card-icon">⚖️</div>
+            <div class="vs-ref-card-title">The 60-30-10 Rule</div>
+            <div class="vs-ref-card-body">Strong paintings usually favor one value family. Aim for roughly 60% one value range (light, mid, or dark), 30% a second, and 10% the third as accent. Equal thirds of everything tends to feel flat and unresolved.</div>
+          </div>
+          <div class="vs-ref-card">
+            <div class="vs-ref-card-icon">🎯</div>
+            <div class="vs-ref-card-title">Three Values First</div>
+            <div class="vs-ref-card-body">Before worrying about all nine steps, block in just three: your lightest lights, a middle value, and your darkest darks. Almost every successful painting reads correctly at this simplified stage — refine from there.</div>
+          </div>
+          <div class="vs-ref-card">
+            <div class="vs-ref-card-icon">💧</div>
+            <div class="vs-ref-card-title">Watercolor Dries Lighter</div>
+            <div class="vs-ref-card-body">Wet watercolor reads roughly 30-50% darker than its dry value. If a wash looks "right" while wet, it will likely dry too light. Mix and judge darker than feels comfortable.</div>
+          </div>
+          <div class="vs-ref-card">
+            <div class="vs-ref-card-icon">☀️</div>
+            <div class="vs-ref-card-title">Light Source = One Value Key</div>
+            <div class="vs-ref-card-body">Everything lit by the same light source should share a value logic: sunlit areas cluster light, shadow areas cluster dark, regardless of local color. A red apple in shadow can be darker than a grey rock in sun.</div>
+          </div>
+          <div class="vs-ref-card">
+            <div class="vs-ref-card-icon">🕳️</div>
+            <div class="vs-ref-card-title">Save Your Whites</div>
+            <div class="vs-ref-card-body">In watercolor, white is the paper — there's no white paint to add back later. Plan your lightest lights before you start, and paint around them deliberately from the very first wash.</div>
+          </div>
+        </div>
+
+        <div class="vs-ref-block">
+          <div class="vs-ref-block-title">Common Value Mistakes</div>
+          <div class="vs-mistake-list">
+            <div class="vs-mistake-row"><span class="vs-mistake-x">✕</span><div><b>Everything mid-value.</b> Timid mixing keeps every shape close to the middle of the scale, so nothing pops and the painting reads as flat and grey regardless of color.</div></div>
+            <div class="vs-mistake-row"><span class="vs-mistake-x">✕</span><div><b>Local color confused with value.</b> A bright yellow and a deep blue can sit at the same value — treating "bright" as automatically "light" causes shapes to separate incorrectly.</div></div>
+            <div class="vs-mistake-row"><span class="vs-mistake-x">✕</span><div><b>Too many equal darks.</b> Scattering your darkest value across many unrelated shapes competes for attention. Reserve true darks for a small, deliberate area.</div></div>
+            <div class="vs-mistake-row"><span class="vs-mistake-x">✕</span><div><b>Value shifts mid-object.</b> Letting a single plane in consistent light drift across several values (from inconsistent water control) reads as noise rather than form.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ PHOTO ANALYSIS TOOL ══ -->
+      <div class="vs-tool-section">
+        <div class="vs-tool-header">
+          <h2>📷 Analyze a Reference Photo</h2>
+          <p>Upload a photo to see it broken into clean value zones, sample individual points, and check whether it's high-key, low-key, or full range.</p>
+        </div>
+
+        <!-- Empty state: no photo loaded yet -->
+        <div class="vs-empty" id="vs-empty">
+          <div class="vs-empty-icon">◑</div>
+          <button class="vs-upload-btn" onclick="triggerValueStudyUpload()">📁 Choose a Photo</button>
+          <div class="vs-empty-hint">Pick any photo from your library — landscapes and still life with clear light and shadow work best.</div>
+        </div>
+
+        <!-- Working state: photo loaded -->
+        <div class="vs-workspace" id="vs-workspace" style="display:none;">
+          <div class="vs-toolbar">
+            <div class="vs-toolbar-group">
+              <span class="vs-toolbar-label">Zones</span>
+              <div class="vs-zone-btns" id="vs-zone-btns">
+                <button class="vs-zone-btn" data-n="3" onclick="setValueStudyZones(3)">3</button>
+                <button class="vs-zone-btn" data-n="4" onclick="setValueStudyZones(4)">4</button>
+                <button class="vs-zone-btn active" data-n="5" onclick="setValueStudyZones(5)">5</button>
+                <button class="vs-zone-btn" data-n="7" onclick="setValueStudyZones(7)">7</button>
+                <button class="vs-zone-btn" data-n="9" onclick="setValueStudyZones(9)">9</button>
+              </div>
+            </div>
+            <div class="vs-toolbar-group">
+              <span class="vs-toolbar-label">View</span>
+              <div class="vs-view-btns">
+                <button class="vs-view-btn active" data-view="split" onclick="setValueStudyView('split')">Split</button>
+                <button class="vs-view-btn" data-view="posterized" onclick="setValueStudyView('posterized')">Study Only</button>
+                <button class="vs-view-btn" data-view="original" onclick="setValueStudyView('original')">Photo Only</button>
+              </div>
+            </div>
+            <div class="vs-toolbar-spacer"></div>
+            <button class="vs-toolbar-btn" onclick="triggerValueStudyUpload()">🔄 New Photo</button>
+            <button class="vs-toolbar-btn" onclick="downloadValueStudy()">⬇ Save Image</button>
           </div>
 
-          <div class="vs-side-panel">
-            <div class="vs-sample-readout" id="vs-sample-readout">
-              <div class="vs-sample-empty">Tap the photo to inspect a value at that point.</div>
+          <div class="vs-main">
+            <div class="vs-canvas-wrap" id="vs-canvas-wrap">
+              <canvas id="vs-canvas-original"></canvas>
+              <canvas id="vs-canvas-posterized"></canvas>
+              <div class="vs-split-handle" id="vs-split-handle"></div>
+              <div class="vs-sample-marker" id="vs-sample-marker" style="display:none;"></div>
+              <div class="vs-canvas-hint" id="vs-canvas-hint">Tap anywhere on the photo to sample a value</div>
             </div>
 
-            <div class="vs-panel-block">
-              <div class="vs-panel-title">Value Distribution</div>
-              <div class="vs-histogram" id="vs-histogram"></div>
-              <div class="vs-histogram-labels"><span>Dark</span><span>Light</span></div>
-            </div>
+            <div class="vs-side-panel">
+              <div class="vs-sample-readout" id="vs-sample-readout">
+                <div class="vs-sample-empty">Tap the photo to inspect a value at that point.</div>
+              </div>
 
-            <div class="vs-panel-block">
-              <div class="vs-panel-title">Zone Key</div>
-              <div class="vs-zone-key" id="vs-zone-key"></div>
-            </div>
+              <div class="vs-panel-block">
+                <div class="vs-panel-title">Value Distribution</div>
+                <div class="vs-histogram" id="vs-histogram"></div>
+                <div class="vs-histogram-labels"><span>Dark</span><span>Light</span></div>
+              </div>
 
-            <div class="vs-panel-block">
-              <div class="vs-panel-title">Reading</div>
-              <div class="vs-key-reading" id="vs-key-reading"></div>
+              <div class="vs-panel-block">
+                <div class="vs-panel-title">Zone Key</div>
+                <div class="vs-zone-key" id="vs-zone-key"></div>
+              </div>
+
+              <div class="vs-panel-block">
+                <div class="vs-panel-title">Reading</div>
+                <div class="vs-key-reading" id="vs-key-reading"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -4566,11 +4684,40 @@ var VS_ZONE_LABELS = {
   9: ['Dark Dark','Middle Dark','Light Dark','Dark Middle','Middle Middle','Light Middle','Dark Light','Middle Light','Light Light'],
 };
 
+var _vsScaleChartBuilt=false;
 function renderValueStudyPage(){
-  // Nothing to do until a photo is loaded — the empty state is already in
-  // the DOM. If we're returning to this page with a photo already loaded
+  // The reference scale chart is static content — build it once, the first
+  // time this page is ever shown, rather than on every navigation to it.
+  if(!_vsScaleChartBuilt){ renderValueStudyScaleChart(); _vsScaleChartBuilt=true; }
+  // Nothing else to do until a photo is loaded — the empty state is already
+  // in the DOM. If we're returning to this page with a photo already loaded
   // (e.g. switching tabs and back), just make sure the canvases are current.
   if(vsState.img) redrawValueStudy();
+}
+
+// Renders the always-visible 9-step reference scale — independent of any
+// uploaded photo. Built once from the same VS_ZONE_LABELS/luminance model as
+// the photo tool below, so the numbering and terminology stay consistent
+// between "the chart you look up" and "the tool you sample values with".
+function renderValueStudyScaleChart(){
+  var wrap=document.getElementById('vs-scale-chart');
+  if(!wrap) return;
+  var n=9;
+  var labels=VS_ZONE_LABELS[9];
+  var cells='';
+  // Display light (zone n-1) first through dark (zone 0) last, matching the
+  // reference convention of Light Light=1 … Dark Dark=9 running left to right.
+  for(var i=n-1;i>=0;i--){
+    var grey=Math.round(((i+0.5)/n)*255);
+    var hex=rgbToHex(grey,grey,grey);
+    var displayNum=n-i;
+    var textCol = grey>140 ? '#1c1a16' : '#f5f0e8';
+    cells+='<div class="vs-scale-cell" style="background:'+hex+';color:'+textCol+';">'
+      +'<span class="vs-scale-cell-label">'+labels[i]+'</span>'
+      +'<span class="vs-scale-cell-num">'+displayNum+'</span>'
+      +'</div>';
+  }
+  wrap.innerHTML=cells;
 }
 
 function triggerValueStudyUpload(){
@@ -4578,7 +4725,12 @@ function triggerValueStudyUpload(){
   var inp=document.getElementById(inputId);
   if(!inp){
     inp=document.createElement('input');
-    inp.type='file'; inp.accept='image/*'; inp.capture='environment';
+    // No 'capture' attribute here — Value Study is almost always used with an
+    // EXISTING reference photo (from the camera roll, a saved image, a photo
+    // taken earlier), not a fresh camera shot. Setting capture='environment'
+    // forces mobile browsers straight into the live camera and skips the
+    // photo library picker entirely, which is wrong for this use case.
+    inp.type='file'; inp.accept='image/*';
     inp.id=inputId; inp.style.display='none';
     document.body.appendChild(inp);
     inp.addEventListener('change',function(){
