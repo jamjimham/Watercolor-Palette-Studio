@@ -61,7 +61,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .page{display:none;flex:1;overflow:hidden;min-height:0;}
 .page.active{display:flex;min-height:0;}
 #page-palettes{flex-direction:row;}
-#page-shopping,#page-harmony,#page-backup,#page-recommended{flex-direction:column;}
+#page-shopping,#page-harmony,#page-backup,#page-recommended,#page-valuestudy{flex-direction:column;}
 
 .palettes-sidebar{width:240px;flex-shrink:0;background:var(--paper2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
 .ps-header{padding:1rem 1rem 0.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
@@ -883,6 +883,145 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 @media(max-width:380px){
   .shop-add-grid{grid-template-columns:repeat(auto-fill,minmax(90px,1fr));}
 }
+
+/* ══════════════════════════════════════
+   VALUE STUDY
+══════════════════════════════════════ */
+.vs-page{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;min-height:0;display:flex;flex-direction:column;background:var(--paper);}
+.vs-page::-webkit-scrollbar{width:4px;}
+.vs-page::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── Empty state ── */
+.vs-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:3rem 1.5rem;gap:0.85rem;max-width:440px;margin:0 auto;
+}
+.vs-empty-icon{font-size:3rem;color:var(--gold2);opacity:0.7;line-height:1;}
+.vs-empty h2{font-family:'IM Fell English',serif;font-size:1.5rem;color:var(--ink);font-weight:400;}
+.vs-empty p{font-size:0.85rem;color:var(--ink2);line-height:1.6;}
+.vs-upload-btn{
+  margin-top:0.4rem;background:var(--ink);color:var(--gold2);border:none;
+  padding:0.75rem 1.5rem;border-radius:var(--r-md);
+  font-family:'Crimson Pro',serif;font-size:0.92rem;font-weight:600;
+  cursor:pointer;transition:background 0.15s,transform 0.15s;
+  box-shadow:0 4px 14px var(--shadow2);
+}
+.vs-upload-btn:hover{background:var(--ink2);transform:translateY(-1px);}
+.vs-empty-hint{font-size:0.72rem;color:var(--ink3);font-style:italic;}
+
+/* ── Toolbar ── */
+.vs-toolbar{
+  display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap;
+  padding:0.7rem 1.1rem;border-bottom:1px solid var(--border);
+  background:var(--paper);flex-shrink:0;
+}
+.vs-toolbar-group{display:flex;align-items:center;gap:0.5rem;}
+.vs-toolbar-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);}
+.vs-zone-btns,.vs-view-btns{display:flex;gap:0.25rem;}
+.vs-zone-btn,.vs-view-btn{
+  padding:0.32rem 0.65rem;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:white;font-family:'Crimson Pro',serif;font-size:0.76rem;color:var(--ink2);
+  cursor:pointer;transition:all 0.13s;
+}
+.vs-zone-btn:hover,.vs-view-btn:hover{border-color:var(--gold);}
+.vs-zone-btn.active,.vs-view-btn.active{background:var(--ink);color:var(--gold2);border-color:var(--ink);}
+.vs-toolbar-spacer{flex:1;}
+.vs-toolbar-btn{
+  padding:0.36rem 0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);
+  background:var(--paper2);font-family:'Crimson Pro',serif;font-size:0.76rem;color:var(--ink2);
+  cursor:pointer;transition:all 0.13s;white-space:nowrap;
+}
+.vs-toolbar-btn:hover{border-color:var(--gold);background:white;}
+
+/* ── Main layout ── */
+.vs-main{flex:1;display:flex;gap:1rem;padding:1rem 1.1rem;min-height:0;overflow:hidden;}
+.vs-canvas-wrap{
+  flex:1;position:relative;border-radius:var(--r-md);overflow:hidden;
+  background:#111;box-shadow:0 4px 20px var(--shadow2);
+  display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;
+  cursor:crosshair;
+}
+.vs-canvas-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;}
+#vs-canvas-posterized{clip-path:inset(0 0 0 50%);}
+.vs-split-handle{
+  position:absolute;top:0;bottom:0;left:50%;width:3px;background:var(--gold2);
+  box-shadow:0 0 0 1px rgba(0,0,0,0.3),0 0 12px rgba(0,0,0,0.4);
+  cursor:ew-resize;transform:translateX(-50%);z-index:5;touch-action:none;
+}
+.vs-split-handle::before{
+  content:'◂▸';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--gold2);color:var(--ink);font-size:0.7rem;font-weight:700;
+  padding:4px 6px;border-radius:20px;letter-spacing:2px;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,0.35);
+}
+.vs-sample-marker{
+  position:absolute;width:26px;height:26px;border-radius:50%;
+  border:3px solid white;box-shadow:0 0 0 1.5px rgba(0,0,0,0.5),0 2px 8px rgba(0,0,0,0.4);
+  transform:translate(-50%,-50%);pointer-events:none;z-index:6;
+}
+.vs-canvas-hint{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  background:rgba(28,26,22,0.72);color:var(--paper);font-size:0.68rem;
+  padding:5px 12px;border-radius:20px;font-style:italic;pointer-events:none;
+  transition:opacity 0.3s;white-space:nowrap;z-index:4;
+}
+.vs-canvas-hint.hide{opacity:0;}
+
+/* ── Side panel ── */
+.vs-side-panel{
+  width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:0.85rem;
+  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-right:2px;
+}
+.vs-side-panel::-webkit-scrollbar{width:3px;}
+.vs-side-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+.vs-sample-readout{
+  background:white;border:1px solid var(--border);border-radius:var(--r-md);
+  padding:0.85rem;box-shadow:0 2px 8px var(--shadow);min-height:64px;
+  display:flex;align-items:center;gap:0.75rem;
+}
+.vs-sample-empty{font-size:0.76rem;color:var(--ink3);font-style:italic;line-height:1.5;}
+.vs-sample-swatch{width:46px;height:46px;border-radius:var(--r-sm);flex-shrink:0;border:1px solid rgba(0,0,0,0.1);box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+.vs-sample-info{flex:1;min-width:0;}
+.vs-sample-zone{font-family:'IM Fell English',serif;font-size:0.98rem;color:var(--ink);line-height:1.25;}
+.vs-sample-meta{font-size:0.68rem;color:var(--ink3);font-family:'Courier New',monospace;margin-top:2px;}
+.vs-sample-bar-wrap{margin-top:5px;height:6px;background:var(--paper2);border-radius:4px;overflow:hidden;}
+.vs-sample-bar{height:100%;background:var(--gold2);border-radius:4px;transition:width 0.2s;}
+
+.vs-panel-block{
+  background:white;border:1px solid var(--border);border-radius:var(--r-md);
+  padding:0.75rem 0.85rem;box-shadow:0 2px 6px var(--shadow);
+}
+.vs-panel-title{
+  font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink3);margin-bottom:0.55rem;
+}
+.vs-histogram{display:flex;align-items:flex-end;gap:2px;height:64px;}
+.vs-histogram-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px;transition:height 0.3s;}
+.vs-histogram-labels{display:flex;justify-content:space-between;font-size:0.62rem;color:var(--ink3);font-style:italic;margin-top:0.35rem;}
+
+.vs-zone-key{display:flex;flex-direction:column;gap:3px;}
+.vs-zone-key-row{display:flex;align-items:center;gap:0.5rem;}
+.vs-zone-key-swatch{width:26px;height:20px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1);}
+.vs-zone-key-label{font-size:0.72rem;color:var(--ink2);}
+.vs-zone-key-pct{margin-left:auto;font-size:0.65rem;color:var(--ink3);font-family:'Courier New',monospace;}
+
+.vs-key-reading{font-size:0.76rem;color:var(--ink2);line-height:1.6;}
+.vs-key-reading b{color:var(--ink);font-weight:600;}
+
+@media(max-width:860px){
+  .vs-main{flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+  .vs-canvas-wrap{min-height:280px;flex:none;height:min(60vw,380px);}
+  .vs-side-panel{width:100%;overflow:visible;}
+}
+@media(max-width:700px){
+  .vs-toolbar{padding:0.6rem 0.85rem;gap:0.7rem;}
+  .vs-toolbar-spacer{display:none;}
+  .vs-toolbar-btn{flex:1;text-align:center;}
+  .vs-main{padding:0.75rem;gap:0.75rem;}
+  .vs-empty{padding:2.5rem 1.2rem;}
+  .vs-canvas-hint{font-size:0.62rem;padding:4px 10px;}
+}
 </style>
 </head>
 <body>
@@ -924,6 +1063,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
     <button class="nav-tab active" onclick="showPage('palettes',this)"><span class="tab-icon">🎨</span> My Palettes</button>
     <button class="nav-tab" onclick="showPage('reference',this)"><span class="tab-icon">📖</span> Brand Reference</button>
     <button class="nav-tab" onclick="showPage('harmony',this)"><span class="tab-icon">🎡</span> Harmony</button>
+    <button class="nav-tab" onclick="showPage('valuestudy',this)"><span class="tab-icon">◑</span> Value Study</button>
     <button class="nav-tab" onclick="showPage('shopping',this)"><span class="tab-icon">🛒</span> Shopping List</button>
     <div class="nav-more-wrap">
       <button class="nav-tab nav-more-btn" onclick="toggleNavMore(event)"><span class="tab-icon">⋯</span> More</button>
@@ -1091,6 +1231,81 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
     </div>
   </div>
 
+  <!-- ══ PAGE: VALUE STUDY ══ -->
+  <div class="page" id="page-valuestudy">
+    <div class="vs-page">
+
+      <!-- Empty state: no photo loaded yet -->
+      <div class="vs-empty" id="vs-empty">
+        <div class="vs-empty-icon">◑</div>
+        <h2>Value Study</h2>
+        <p>Upload a reference photo to see it broken into clean value zones — the single most useful thing to nail before you touch a brush to paper.</p>
+        <button class="vs-upload-btn" onclick="triggerValueStudyUpload()">📷 Upload a Reference Photo</button>
+        <div class="vs-empty-hint">Works best with landscape or still-life photos with clear light and shadow.</div>
+      </div>
+
+      <!-- Working state: photo loaded -->
+      <div class="vs-workspace" id="vs-workspace" style="display:none;">
+        <div class="vs-toolbar">
+          <div class="vs-toolbar-group">
+            <span class="vs-toolbar-label">Zones</span>
+            <div class="vs-zone-btns" id="vs-zone-btns">
+              <button class="vs-zone-btn" data-n="3" onclick="setValueStudyZones(3)">3</button>
+              <button class="vs-zone-btn" data-n="4" onclick="setValueStudyZones(4)">4</button>
+              <button class="vs-zone-btn active" data-n="5" onclick="setValueStudyZones(5)">5</button>
+              <button class="vs-zone-btn" data-n="7" onclick="setValueStudyZones(7)">7</button>
+              <button class="vs-zone-btn" data-n="9" onclick="setValueStudyZones(9)">9</button>
+            </div>
+          </div>
+          <div class="vs-toolbar-group">
+            <span class="vs-toolbar-label">View</span>
+            <div class="vs-view-btns">
+              <button class="vs-view-btn active" data-view="split" onclick="setValueStudyView('split')">Split</button>
+              <button class="vs-view-btn" data-view="posterized" onclick="setValueStudyView('posterized')">Study Only</button>
+              <button class="vs-view-btn" data-view="original" onclick="setValueStudyView('original')">Photo Only</button>
+            </div>
+          </div>
+          <div class="vs-toolbar-spacer"></div>
+          <button class="vs-toolbar-btn" onclick="triggerValueStudyUpload()">🔄 New Photo</button>
+          <button class="vs-toolbar-btn" onclick="downloadValueStudy()">⬇ Save Image</button>
+        </div>
+
+        <div class="vs-main">
+          <div class="vs-canvas-wrap" id="vs-canvas-wrap">
+            <canvas id="vs-canvas-original"></canvas>
+            <canvas id="vs-canvas-posterized"></canvas>
+            <div class="vs-split-handle" id="vs-split-handle"></div>
+            <div class="vs-sample-marker" id="vs-sample-marker" style="display:none;"></div>
+            <div class="vs-canvas-hint" id="vs-canvas-hint">Tap anywhere on the photo to sample a value</div>
+          </div>
+
+          <div class="vs-side-panel">
+            <div class="vs-sample-readout" id="vs-sample-readout">
+              <div class="vs-sample-empty">Tap the photo to inspect a value at that point.</div>
+            </div>
+
+            <div class="vs-panel-block">
+              <div class="vs-panel-title">Value Distribution</div>
+              <div class="vs-histogram" id="vs-histogram"></div>
+              <div class="vs-histogram-labels"><span>Dark</span><span>Light</span></div>
+            </div>
+
+            <div class="vs-panel-block">
+              <div class="vs-panel-title">Zone Key</div>
+              <div class="vs-zone-key" id="vs-zone-key"></div>
+            </div>
+
+            <div class="vs-panel-block">
+              <div class="vs-panel-title">Reading</div>
+              <div class="vs-key-reading" id="vs-key-reading"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ══ PAGE: BRAND REFERENCE ══ -->
   <div class="page" id="page-reference">
     <aside class="ref-sidebar" id="ref-sidebar">
@@ -1211,6 +1426,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
       <button class="mobile-nav-item" data-page="palettes" onclick="mobileNavDrawer('palettes',this)"><span class="mni">🎨</span><span class="mnl">Palettes</span></button>
       <button class="mobile-nav-item" data-page="reference" onclick="mobileNavDrawer('reference',this)"><span class="mni">📖</span><span class="mnl">Reference</span></button>
       <button class="mobile-nav-item" data-page="harmony" onclick="mobileNavDrawer('harmony',this)"><span class="mni">🎡</span><span class="mnl">Harmony</span></button>
+      <button class="mobile-nav-item" data-page="valuestudy" onclick="mobileNavDrawer('valuestudy',this)"><span class="mni">◑</span><span class="mnl">Value Study</span></button>
       <button class="mobile-nav-item" data-page="shopping" onclick="mobileNavDrawer('shopping',this)"><span class="mni">🛒</span><span class="mnl">Shopping</span></button>
     </div>
     <div class="mobile-nav-section-label">More Tools</div>
@@ -2143,6 +2359,7 @@ function showPage(id,btn){
   if(id==='recipes') renderRecipes();
   if(id==='shopping'){shopSearchBuilt=false;renderShoppingPage();}
   if(id==='harmony') renderHarmonyPage();
+  if(id==='valuestudy') renderValueStudyPage();
   if(id==='backup') renderBackupPage();
 }
 
@@ -4313,6 +4530,404 @@ function renderHarmonyPage() {
   renderHarmonyResult();
 }
 
+// ══════════════════════════════════════════════════════════════
+// VALUE STUDY
+// ══════════════════════════════════════════════════════════════
+// A reference photo is converted to greyscale, then posterized into N tonal
+// zones (3/4/5/7/9) using perceptual luminance. A draggable split divider
+// lets you compare the original photo against the value study directly, and
+// tapping anywhere samples the exact zone/luminance at that point — the kind
+// of "what value is this really?" check painters do constantly when working
+// from a photo. Nothing here is written to localStorage by default (photos
+// are large); "Save Image" exports a PNG so it can be kept outside the app.
+
+var vsState = {
+  img: null,            // the loaded HTMLImageElement
+  zones: 5,             // current posterization step count (3/4/5/7/9)
+  view: 'split',         // 'split' | 'posterized' | 'original'
+  splitPct: 50,          // current split divider position, 0–100
+  zoneBounds: null,      // [ ] luminance thresholds for the active zone count, set by posterize
+  zoneCounts: null,      // pixel counts per zone, for the histogram/key
+  origCanvas: null,      // offscreen full-res original (for sampling + export)
+  postCanvas: null,      // offscreen full-res posterized (for sampling + export)
+};
+
+// Named labels for each zone count, ordered DARK → LIGHT to match zone index
+// 0 = darkest (lowest luminance) through zone n-1 = lightest, which is the
+// order posterizeValueStudy() actually assigns. Using the same "Light Light /
+// Middle Light / … Dark Dark" language as the Munsell-derived 9-step scale
+// keeps this consistent with how painters already talk about value, while
+// gracefully collapsing to fewer, coarser labels at lower step counts.
+var VS_ZONE_LABELS = {
+  3: ['Dark','Middle','Light'],
+  4: ['Dark','Middle Dark','Middle Light','Light'],
+  5: ['Dark','Dark Middle','Middle','Light Middle','Light'],
+  7: ['Dark Dark','Dark','Dark Middle','Middle','Light Middle','Light','Light Light'],
+  9: ['Dark Dark','Middle Dark','Light Dark','Dark Middle','Middle Middle','Light Middle','Dark Light','Middle Light','Light Light'],
+};
+
+function renderValueStudyPage(){
+  // Nothing to do until a photo is loaded — the empty state is already in
+  // the DOM. If we're returning to this page with a photo already loaded
+  // (e.g. switching tabs and back), just make sure the canvases are current.
+  if(vsState.img) redrawValueStudy();
+}
+
+function triggerValueStudyUpload(){
+  var inputId='_vs_photoinput';
+  var inp=document.getElementById(inputId);
+  if(!inp){
+    inp=document.createElement('input');
+    inp.type='file'; inp.accept='image/*'; inp.capture='environment';
+    inp.id=inputId; inp.style.display='none';
+    document.body.appendChild(inp);
+    inp.addEventListener('change',function(){
+      var file=inp.files[0]; if(!file) return;
+      var reader=new FileReader();
+      reader.onload=function(ev){
+        var img=new Image();
+        img.onload=function(){ loadValueStudyImage(img); };
+        img.src=ev.target.result;
+      };
+      reader.readAsDataURL(file);
+      inp.value='';
+    });
+  }
+  inp.click();
+}
+
+function loadValueStudyImage(img){
+  vsState.img=img;
+  vsState.splitPct=50;
+
+  // Cap working resolution for performance — value study doesn't need full
+  // camera resolution, and processing every pixel of a 12MP photo on a phone
+  // would visibly stutter. 900px on the long edge is plenty for both on-screen
+  // display and a clean exported PNG.
+  var MAX=900;
+  var scale=Math.min(1, MAX/Math.max(img.width,img.height));
+  var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+
+  var oc=document.createElement('canvas'); oc.width=w; oc.height=h;
+  oc.getContext('2d').drawImage(img,0,0,w,h);
+  vsState.origCanvas=oc;
+
+  document.getElementById('vs-empty').style.display='none';
+  document.getElementById('vs-workspace').style.display='flex';
+
+  posterizeValueStudy();
+  redrawValueStudy();
+
+  // Fade the "tap to sample" hint out after a few seconds so it doesn't
+  // linger and clutter the image once the user gets it.
+  var hint=document.getElementById('vs-canvas-hint');
+  hint.classList.remove('hide');
+  clearTimeout(window._vsHintTimer);
+  window._vsHintTimer=setTimeout(function(){ hint.classList.add('hide'); },4000);
+}
+
+// Converts the loaded photo to greyscale using perceptual (Rec. 601)
+// luminance weighting, then quantizes into vsState.zones evenly-spaced
+// bands. Rebuilds vsState.postCanvas and the histogram/zone-count data used
+// by the side panel. Called whenever the photo loads or the zone count changes.
+function posterizeValueStudy(){
+  var oc=vsState.origCanvas;
+  var w=oc.width, h=oc.height;
+  var octx=oc.getContext('2d');
+  var src=octx.getImageData(0,0,w,h);
+
+  var pc=document.createElement('canvas'); pc.width=w; pc.height=h;
+  var pctx=pc.getContext('2d');
+  var out=pctx.createImageData(w,h);
+
+  var n=vsState.zones;
+  // Zone boundaries in 0–255 luminance space, evenly spaced.
+  var bounds=[];
+  for(var i=1;i<n;i++) bounds.push(Math.round(255*i/n));
+  vsState.zoneBounds=bounds;
+
+  // Representative grey level for each zone: the CENTRE of its luminance
+  // range rather than a flat linear ramp — this keeps the darkest zone from
+  // reading as pure black and the lightest from reading as pure white unless
+  // the photo actually contains those extremes, which better matches how a
+  // limited-value painting is actually mixed (you rarely mix true 0/255).
+  var counts=new Array(n).fill(0);
+  var d=src.data, od=out.data;
+  for(var p=0;p<d.length;p+=4){
+    var lum = d[p]*0.299 + d[p+1]*0.587 + d[p+2]*0.114;
+    var zone=0;
+    while(zone<bounds.length && lum>=bounds[zone]) zone++;
+    counts[zone]++;
+    var repGrey = Math.round(((zone+0.5)/n)*255);
+    od[p]=od[p+1]=od[p+2]=repGrey; od[p+3]=255;
+  }
+  pctx.putImageData(out,0,0);
+  vsState.postCanvas=pc;
+  vsState.zoneCounts=counts;
+
+  renderValueStudyHistogram();
+  renderValueStudyZoneKey();
+  renderValueStudyReading();
+}
+
+function setValueStudyZones(n){
+  vsState.zones=n;
+  document.querySelectorAll('.vs-zone-btn').forEach(function(b){
+    b.classList.toggle('active', parseInt(b.dataset.n,10)===n);
+  });
+  if(vsState.img){ posterizeValueStudy(); redrawValueStudy(); }
+}
+
+function setValueStudyView(view){
+  vsState.view=view;
+  document.querySelectorAll('.vs-view-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.view===view);
+  });
+  redrawValueStudy();
+}
+
+// Draws both the original and posterized canvases into the visible on-screen
+// canvases and applies the current view mode (split / posterized-only /
+// original-only) via the clip-path on the posterized layer + handle visibility.
+function redrawValueStudy(){
+  if(!vsState.origCanvas||!vsState.postCanvas) return;
+  var ocv=document.getElementById('vs-canvas-original');
+  var pcv=document.getElementById('vs-canvas-posterized');
+  var w=vsState.origCanvas.width, h=vsState.origCanvas.height;
+  ocv.width=w; ocv.height=h;
+  pcv.width=w; pcv.height=h;
+  ocv.getContext('2d').drawImage(vsState.origCanvas,0,0);
+  pcv.getContext('2d').drawImage(vsState.postCanvas,0,0);
+
+  var handle=document.getElementById('vs-split-handle');
+  if(vsState.view==='split'){
+    pcv.style.clipPath='inset(0 0 0 '+vsState.splitPct+'%)';
+    handle.style.display='block';
+    handle.style.left=vsState.splitPct+'%';
+    ocv.style.opacity='1'; pcv.style.opacity='1';
+  } else if(vsState.view==='posterized'){
+    pcv.style.clipPath='inset(0 0 0 0)';
+    handle.style.display='none';
+    ocv.style.opacity='0'; pcv.style.opacity='1';
+  } else { // original
+    pcv.style.clipPath='inset(0 0 0 100%)';
+    handle.style.display='none';
+    ocv.style.opacity='1'; pcv.style.opacity='1';
+  }
+}
+
+// ── Split-divider dragging ──
+(function(){
+  var dragging=false;
+  var justDragged=false; // suppresses the click event a drag-release also fires
+  function pctFromEvent(e, wrap){
+    var rect=wrap.getBoundingClientRect();
+    var x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    return Math.max(0, Math.min(100, (x/rect.width)*100));
+  }
+  function bind(){
+    var handle=document.getElementById('vs-split-handle');
+    var wrap=document.getElementById('vs-canvas-wrap');
+    if(!handle||!wrap||handle._vsBound) return;
+    handle._vsBound=true;
+    handle.addEventListener('mousedown', function(e){ dragging=true; e.preventDefault(); });
+    handle.addEventListener('touchstart', function(e){ dragging=true; }, {passive:true});
+    window.addEventListener('mousemove', function(e){
+      if(!dragging||vsState.view!=='split') return;
+      justDragged=true;
+      vsState.splitPct=pctFromEvent(e, wrap);
+      redrawValueStudy();
+    });
+    window.addEventListener('touchmove', function(e){
+      if(!dragging||vsState.view!=='split') return;
+      justDragged=true;
+      vsState.splitPct=pctFromEvent(e, wrap);
+      redrawValueStudy();
+      e.preventDefault();
+    }, {passive:false});
+    function endDrag(){
+      if(dragging&&justDragged){
+        // A drag that actually moved the handle will also fire a native
+        // 'click' on whatever element is under the pointer at release —
+        // often the canvas wrapper, which would otherwise incorrectly drop
+        // a sample marker at that spot. Swallow exactly one click after a
+        // real drag; a plain click without movement is unaffected.
+        window._vsSuppressNextClick=true;
+        setTimeout(function(){ window._vsSuppressNextClick=false; },0);
+      }
+      dragging=false; justDragged=false;
+    }
+    window.addEventListener('mouseup', endDrag);
+    window.addEventListener('touchend', endDrag);
+  }
+  window._vsBindSplitHandle=bind;
+  bind();
+})();
+
+// ── Tap/click to sample a value at a point ──
+(function(){
+  function bind(){
+    var wrap=document.getElementById('vs-canvas-wrap');
+    if(!wrap||wrap._vsSampleBound) return;
+    wrap._vsSampleBound=true;
+    wrap.addEventListener('click', function(e){
+      // Ignore the synthetic click a split-handle drag-release also fires,
+      // and ignore clicks that land directly on the handle itself.
+      if(window._vsSuppressNextClick) return;
+      if(e.target&&e.target.id==='vs-split-handle') return;
+      sampleValueStudyAt(e);
+    });
+  }
+  window._vsBindSampler=bind;
+  bind();
+})();
+
+function sampleValueStudyAt(e){
+  if(!vsState.origCanvas) return;
+  var wrap=document.getElementById('vs-canvas-wrap');
+  var rect=wrap.getBoundingClientRect();
+
+  // The canvas is displayed with object-fit:contain, so we need to map the
+  // click position from wrapper-space into actual image-pixel-space,
+  // accounting for the letterboxing on whichever axis doesn't fill the wrap.
+  var iw=vsState.origCanvas.width, ih=vsState.origCanvas.height;
+  var scale=Math.min(rect.width/iw, rect.height/ih);
+  var dispW=iw*scale, dispH=ih*scale;
+  var offX=(rect.width-dispW)/2, offY=(rect.height-dispH)/2;
+  var clickX=e.clientX-rect.left, clickY=e.clientY-rect.top;
+  var px=Math.round((clickX-offX)/scale), py=Math.round((clickY-offY)/scale);
+  if(px<0||py<0||px>=iw||py>=ih) return; // clicked in the letterbox margin
+
+  var octx=vsState.origCanvas.getContext('2d');
+  var pixel=octx.getImageData(px,py,1,1).data;
+  var lum=pixel[0]*0.299+pixel[1]*0.587+pixel[2]*0.114;
+  var n=vsState.zones, bounds=vsState.zoneBounds;
+  var zone=0;
+  while(zone<bounds.length && lum>=bounds[zone]) zone++;
+  var repGrey=Math.round(((zone+0.5)/n)*255);
+  var hex=rgbToHex(repGrey,repGrey,repGrey);
+  var origHex=rgbToHex(pixel[0],pixel[1],pixel[2]);
+  var labels=VS_ZONE_LABELS[n]||[];
+  var label=labels[zone]||('Zone '+(zone+1));
+
+  // Position the marker dot at the click point (in wrapper-space, so it
+  // tracks correctly regardless of image scale/letterboxing).
+  var marker=document.getElementById('vs-sample-marker');
+  marker.style.left=clickX+'px'; marker.style.top=clickY+'px';
+  marker.style.background=origHex;
+  marker.style.display='block';
+
+  var pct=Math.round((lum/255)*100);
+  document.getElementById('vs-sample-readout').innerHTML=
+    '<div class="vs-sample-swatch" style="background:'+hex+';"></div>'
+    +'<div class="vs-sample-info">'
+      +'<div class="vs-sample-zone">'+label+' <span style="color:var(--ink3);font-weight:400;">— Zone '+(n-zone)+' of '+n+'</span></div>'
+      +'<div class="vs-sample-meta">Luminance '+Math.round(lum)+'/255 · '+pct+'% light</div>'
+      +'<div class="vs-sample-bar-wrap"><div class="vs-sample-bar" style="width:'+pct+'%;"></div></div>'
+    +'</div>';
+
+  var hint=document.getElementById('vs-canvas-hint');
+  if(hint) hint.classList.add('hide');
+}
+
+// ── Side panel: histogram, zone key, plain-language reading ──
+function renderValueStudyHistogram(){
+  var wrap=document.getElementById('vs-histogram');
+  if(!wrap||!vsState.zoneCounts) return;
+  var counts=vsState.zoneCounts;
+  var total=counts.reduce(function(a,b){return a+b;},0)||1;
+  var max=Math.max.apply(null,counts)||1;
+  var n=vsState.zones;
+  wrap.innerHTML=counts.map(function(c,i){
+    var h=Math.max(2, Math.round((c/max)*64));
+    var grey=Math.round(((i+0.5)/n)*255);
+    return '<div class="vs-histogram-bar" style="height:'+h+'px;background:'+rgbToHex(grey,grey,grey)+';" title="'+Math.round(c/total*100)+'%"></div>';
+  }).join('');
+}
+
+function renderValueStudyZoneKey(){
+  var wrap=document.getElementById('vs-zone-key');
+  if(!wrap||!vsState.zoneCounts) return;
+  var n=vsState.zones, counts=vsState.zoneCounts;
+  var total=counts.reduce(function(a,b){return a+b;},0)||1;
+  var labels=VS_ZONE_LABELS[n]||[];
+  // Build light→dark for display (matches the reference value-scale convention
+  // of "Light Light" first), while the underlying zone index (used in the
+  // sample readout as "Zone X of N") stays dark=1…light=N internally.
+  var rows=[];
+  for(var i=n-1;i>=0;i--){
+    var grey=Math.round(((i+0.5)/n)*255);
+    var pct=Math.round(counts[i]/total*100);
+    rows.push('<div class="vs-zone-key-row">'
+      +'<div class="vs-zone-key-swatch" style="background:'+rgbToHex(grey,grey,grey)+';"></div>'
+      +'<div class="vs-zone-key-label">'+(labels[i]||('Zone '+(i+1)))+'</div>'
+      +'<div class="vs-zone-key-pct">'+pct+'%</div>'
+      +'</div>');
+  }
+  wrap.innerHTML=rows.join('');
+}
+
+// A short plain-language read on the photo's overall tonal character —
+// genuinely useful before committing to paint something, since it tells you
+// at a glance whether you're looking at a high-key, low-key, or full-range
+// subject, which should inform how you plan your washes.
+function renderValueStudyReading(){
+  var wrap=document.getElementById('vs-key-reading');
+  if(!wrap||!vsState.zoneCounts) return;
+  var n=vsState.zones, counts=vsState.zoneCounts;
+  var total=counts.reduce(function(a,b){return a+b;},0)||1;
+  // counts[0] is the DARKEST zone and counts[n-1] is the LIGHTEST (matches
+  // posterizeValueStudy's indexing), so the low end of the array is the dark
+  // share and the high end is the light share.
+  var darkShare=(counts.slice(0,Math.ceil(n/3)).reduce(function(a,b){return a+b;},0))/total;
+  var lightShare=(counts.slice(-Math.ceil(n/3)).reduce(function(a,b){return a+b;},0))/total;
+  var midShare=1-lightShare-darkShare;
+
+  var character;
+  if(lightShare>0.55) character='This is a <b>high-key</b> subject — dominated by light values. Keep your darkest dark deliberate and small, or it will overpower the piece.';
+  else if(darkShare>0.55) character='This is a <b>low-key</b> subject — dominated by dark values. Save a few genuinely light passages so the darks read as dark by contrast.';
+  else if(midShare>0.55) character='This subject sits mostly in the <b>middle values</b>, with limited extremes. Consider deliberately pushing your lightest light and darkest dark to add punch.';
+  else character='This subject has a <b>full tonal range</b> — a healthy spread from light to dark. Good candidate for a confident, high-contrast study.';
+
+  var dominant=counts.indexOf(Math.max.apply(null,counts));
+  var labels=VS_ZONE_LABELS[n]||[];
+  var domLabel=labels[dominant]||('Zone '+(dominant+1));
+
+  wrap.innerHTML='<p>'+character+'</p><p style="margin-top:0.5rem;">Most common value: <b>'+domLabel+'</b> ('+Math.round(counts[dominant]/total*100)+'% of the frame).</p>';
+}
+
+// Exports the current view (respecting split/posterized/original) as a PNG
+// download — since photos aren't persisted in localStorage, this is the way
+// to keep a value study for reference in the field or paste into notes later.
+function downloadValueStudy(){
+  if(!vsState.origCanvas||!vsState.postCanvas){ showToast('Load a photo first'); return; }
+  var w=vsState.origCanvas.width, h=vsState.origCanvas.height;
+  var out=document.createElement('canvas'); out.width=w; out.height=h;
+  var octx=out.getContext('2d');
+  if(vsState.view==='original'){
+    octx.drawImage(vsState.origCanvas,0,0);
+  } else if(vsState.view==='posterized'){
+    octx.drawImage(vsState.postCanvas,0,0);
+  } else {
+    var splitX=Math.round(w*vsState.splitPct/100);
+    octx.drawImage(vsState.origCanvas,0,0);
+    octx.save();
+    octx.beginPath();
+    octx.rect(splitX,0,w-splitX,h);
+    octx.clip();
+    octx.drawImage(vsState.postCanvas,0,0);
+    octx.restore();
+    octx.fillStyle='rgba(201,152,48,0.9)';
+    octx.fillRect(splitX-1,0,2,h);
+  }
+  var link=document.createElement('a');
+  link.download='value-study.png';
+  link.href=out.toDataURL('image/png');
+  link.click();
+  showToast('Value study saved');
+}
+
+
 function renderHarmonyColorGrid() {
   var grid = document.getElementById('harmony-color-grid');
   if (!grid) return;
@@ -4477,6 +5092,7 @@ var PAGE_META = {
   'recipes':     {icon:'🧪', label:'Recipes'},
   'shopping':    {icon:'🛒', label:'Shopping'},
   'harmony':     {icon:'🎡', label:'Harmony'},
+  'valuestudy':  {icon:'◑',  label:'Value Study'},
   'backup':      {icon:'💾', label:'Backup'},
 };
 
@@ -4569,7 +5185,7 @@ window.addEventListener('resize', function(){
 
 // iOS momentum scroll prevention on non-scrollable areas
 document.addEventListener('touchmove', function(e){
-  var scrollable = '.palette-view,.ref-grid-wrap,.tracker-wrap,.cost-wrap,.recipes-wrap,.opacity-wrap,.pigment-compare-wrap,.palette-list,.ref-sidebar,.palettes-sidebar,.mixer-body,.paper-wrap,.shop-page,.harmony-page,.harmony-pick-col,.harmony-result-col,.backup-page,.backup-textarea,.recommended-wrap';
+  var scrollable = '.palette-view,.ref-grid-wrap,.tracker-wrap,.cost-wrap,.recipes-wrap,.opacity-wrap,.pigment-compare-wrap,.palette-list,.ref-sidebar,.palettes-sidebar,.mixer-body,.paper-wrap,.shop-page,.harmony-page,.harmony-pick-col,.harmony-result-col,.backup-page,.backup-textarea,.recommended-wrap,.vs-page,.vs-side-panel,.vs-main';
   if (e.target.closest(scrollable)) return;
   e.preventDefault();
 }, {passive: false});
