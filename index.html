@@ -892,7 +892,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .vs-page::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 
 /* ── Reference section (always visible) ── */
-.vs-ref-section{padding:1.5rem 1.5rem 1rem;max-width:960px;margin:0 auto;width:100%;}
+.vs-ref-section{padding:1.5rem 1.5rem 1rem;max-width:960px;margin:0 auto;width:100%;flex-shrink:0;}
 .vs-ref-header h1{font-family:'IM Fell English',serif;font-size:1.7rem;color:var(--ink);font-weight:400;margin-bottom:0.5rem;}
 .vs-ref-header p{font-size:0.86rem;color:var(--ink2);line-height:1.65;max-width:680px;margin-bottom:1.6rem;}
 
@@ -933,7 +933,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .vs-mistake-row b{color:var(--ink);font-weight:600;}
 
 /* ── Photo tool section ── */
-.vs-tool-section{border-top:1px solid var(--border);background:var(--paper2);padding:1.5rem;flex:1;display:flex;flex-direction:column;min-height:520px;}
+.vs-tool-section{border-top:1px solid var(--border);background:var(--paper2);padding:1.5rem;flex-shrink:0;}
 .vs-tool-header{max-width:960px;margin:0 auto;width:100%;margin-bottom:1rem;}
 .vs-tool-header h2{font-family:'IM Fell English',serif;font-size:1.25rem;color:var(--ink);font-weight:400;margin-bottom:0.3rem;}
 .vs-tool-header p{font-size:0.82rem;color:var(--ink2);line-height:1.55;}
@@ -958,9 +958,12 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 /* ── Toolbar ── */
 .vs-toolbar{
   display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap;
-  padding:0.7rem 1.1rem;border-bottom:1px solid var(--border);
+  padding:0.7rem 1.1rem;border:1px solid var(--border);border-bottom:none;
+  border-radius:var(--r-md) var(--r-md) 0 0;
   background:var(--paper);flex-shrink:0;
+  max-width:1400px;margin:0 auto;
 }
+.vs-workspace{max-width:1400px;margin:0 auto;}
 .vs-toolbar-group{display:flex;align-items:center;gap:0.5rem;}
 .vs-toolbar-label{font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);}
 .vs-zone-btns,.vs-view-btns{display:flex;gap:0.25rem;}
@@ -980,11 +983,20 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .vs-toolbar-btn:hover{border-color:var(--gold);background:white;}
 
 /* ── Main layout ── */
-.vs-main{flex:1;display:flex;gap:1rem;padding:1rem 1.1rem;min-height:0;overflow:hidden;}
+/* NOTE: this section used to rely on flex:1 to "fill remaining viewport
+   height", which only works inside a container with a fixed, non-scrolling
+   height. .vs-page scrolls (it holds the reference content above this tool),
+   so there is no fixed "remaining height" to fill — that mismatch is what
+   collapsed the canvas to zero height on phones. Every element below now
+   gets an explicit height instead, and the whole page flows + scrolls as
+   one long document, which is also just a better fit for "reference page
+   with a tool section," not an app-within-an-app fixed workspace. */
+.vs-main{display:flex;gap:1rem;max-width:1400px;margin:0 auto;padding:1rem;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);background:var(--paper);box-shadow:0 2px 10px var(--shadow);}
 .vs-canvas-wrap{
-  flex:1;position:relative;border-radius:var(--r-md);overflow:hidden;
+  flex:2;position:relative;border-radius:var(--r-md);overflow:hidden;
   background:#111;box-shadow:0 4px 20px var(--shadow2);
-  display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;
+  display:flex;align-items:center;justify-content:center;min-width:0;
+  height:min(56vw,520px);
   cursor:crosshair;
 }
 .vs-canvas-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;pointer-events:none;}
@@ -1015,11 +1027,8 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 
 /* ── Side panel ── */
 .vs-side-panel{
-  width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:0.85rem;
-  overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-right:2px;
+  flex:1;min-width:240px;display:flex;flex-direction:column;gap:0.85rem;
 }
-.vs-side-panel::-webkit-scrollbar{width:3px;}
-.vs-side-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 
 .vs-sample-readout{
   background:white;border:1px solid var(--border);border-radius:var(--r-md);
@@ -1056,16 +1065,17 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .vs-key-reading b{color:var(--ink);font-weight:600;}
 
 @media(max-width:860px){
-  .vs-main{flex-direction:column;overflow-y:auto;overflow-x:hidden;}
-  .vs-canvas-wrap{min-height:280px;flex:none;height:min(60vw,380px);}
-  .vs-side-panel{width:100%;overflow:visible;}
+  .vs-main{flex-direction:column;}
+  .vs-canvas-wrap{height:min(70vw,360px);}
+  .vs-side-panel{width:100%;min-width:0;}
   .vs-ref-grid{grid-template-columns:repeat(2,1fr);}
 }
 @media(max-width:700px){
   .vs-toolbar{padding:0.6rem 0.85rem;gap:0.7rem;}
   .vs-toolbar-spacer{display:none;}
   .vs-toolbar-btn{flex:1;text-align:center;}
-  .vs-main{padding:0.75rem;gap:0.75rem;}
+  .vs-main{padding:0;gap:0.75rem;}
+  .vs-canvas-wrap{height:min(85vw,340px);}
   .vs-empty{padding:1.8rem 1.2rem;}
   .vs-canvas-hint{font-size:0.62rem;padding:4px 10px;}
   .vs-ref-section{padding:1.1rem 1rem 0.5rem;}
@@ -1074,7 +1084,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .vs-scale-cell{min-height:64px;}
   .vs-scale-cell-label{font-size:0.54rem;}
   .vs-scale-cell-num{font-size:0.92rem;}
-  .vs-tool-section{padding:1.1rem;min-height:420px;}
+  .vs-tool-section{padding:1.1rem;}
 }
 </style>
 </head>
