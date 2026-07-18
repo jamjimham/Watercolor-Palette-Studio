@@ -944,6 +944,14 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   text-align:center;padding:2.2rem 1.5rem;gap:0.7rem;max-width:440px;margin:0 auto;
   background:white;border:1px dashed var(--border);border-radius:var(--r-lg);
 }
+/* Default state: no photo loaded — workspace is hidden by CSS itself (not
+   only by an inline style set from JS), so even if the JS toggle logic only
+   partially runs, the two states can't both end up visible at once. A
+   single class on .vs-tool-section is the one source of truth for which
+   state is showing. */
+.vs-workspace{display:none;}
+.vs-tool-section.vs-has-photo .vs-empty{display:none;}
+.vs-tool-section.vs-has-photo .vs-workspace{display:flex;flex-direction:column;}
 .vs-empty-icon{font-size:2.4rem;color:var(--gold2);opacity:0.7;line-height:1;}
 .vs-upload-btn{
   margin-top:0.2rem;background:var(--ink);color:var(--gold2);border:none;
@@ -1372,7 +1380,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
         </div>
 
         <!-- Working state: photo loaded -->
-        <div class="vs-workspace" id="vs-workspace" style="display:none;">
+        <div class="vs-workspace" id="vs-workspace">
           <div class="vs-toolbar">
             <div class="vs-toolbar-group">
               <span class="vs-toolbar-label">Zones</span>
@@ -4746,9 +4754,30 @@ function triggerValueStudyUpload(){
     inp.addEventListener('change',function(){
       var file=inp.files[0]; if(!file) return;
       var reader=new FileReader();
+      reader.onerror=function(){
+        showToast('Could not read that photo — try a different one');
+      };
       reader.onload=function(ev){
         var img=new Image();
-        img.onload=function(){ loadValueStudyImage(img); };
+        img.onerror=function(){
+          // Some iOS photo formats (HEIC originals that didn't convert
+          // cleanly, certain edited/Live Photo exports) can fail to decode
+          // as an <img>. Fail loudly instead of leaving a blank workspace
+          // with no explanation.
+          showToast('That photo could not be loaded — try exporting it as JPEG or taking a new screenshot of it');
+        };
+        img.onload=function(){
+          try{
+            loadValueStudyImage(img);
+          }catch(err){
+            console.error('Value Study load failed:', err);
+            showToast('Something went wrong loading that photo — try a smaller or different image');
+            // Roll back to a clean empty state rather than leaving a mixed
+            // half-loaded UI on screen.
+            var toolSectionEl=document.querySelector('.vs-tool-section');
+            if(toolSectionEl) toolSectionEl.classList.remove('vs-has-photo');
+          }
+        };
         img.src=ev.target.result;
       };
       reader.readAsDataURL(file);
@@ -4762,20 +4791,39 @@ function loadValueStudyImage(img){
   vsState.img=img;
   vsState.splitPct=50;
 
-  // Cap working resolution for performance — value study doesn't need full
-  // camera resolution, and processing every pixel of a 12MP photo on a phone
-  // would visibly stutter. 900px on the long edge is plenty for both on-screen
-  // display and a clean exported PNG.
-  var MAX=900;
+  // Cap working resolution for performance AND to stay well under iOS
+  // Safari's canvas memory ceiling — the app already keeps many other
+  // canvases alive (every rendered swatch), and iOS silently fails/blanks
+  // canvas allocations once total canvas memory across the page gets too
+  // high. 700px on the long edge (down from 900) gives more headroom while
+  // still being plenty for on-screen display and a clean exported PNG.
+  var MAX=700;
   var scale=Math.min(1, MAX/Math.max(img.width,img.height));
-  var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+  var w=Math.max(1,Math.round(img.width*scale)), h=Math.max(1,Math.round(img.height*scale));
 
   var oc=document.createElement('canvas'); oc.width=w; oc.height=h;
-  oc.getContext('2d').drawImage(img,0,0,w,h);
+  var octx=oc.getContext('2d');
+  if(!octx) throw new Error('Could not get 2D canvas context');
+  octx.drawImage(img,0,0,w,h);
+
+  // Confirm the draw actually produced readable pixel data before
+  // committing to this as the new state — catches tainted-canvas errors
+  // and silent iOS allocation failures immediately, with a clear message,
+  // rather than leaving a permanently blank workspace.
+  var probe;
+  try{
+    probe = octx.getImageData(0,0,Math.min(4,w),Math.min(4,h));
+  }catch(err){
+    throw new Error('Could not read image data from the photo (it may be a format the browser can\'t process here): '+err.message);
+  }
+  if(!probe || !probe.data || probe.data.length===0){
+    throw new Error('Photo loaded but produced no image data');
+  }
+
   vsState.origCanvas=oc;
 
-  document.getElementById('vs-empty').style.display='none';
-  document.getElementById('vs-workspace').style.display='flex';
+  var toolSection=document.querySelector('.vs-tool-section');
+  if(toolSection) toolSection.classList.add('vs-has-photo');
 
   posterizeValueStudy();
   redrawValueStudy();
