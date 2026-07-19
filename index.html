@@ -1095,7 +1095,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .vs-tool-section{padding:1.1rem;}
 }
 </style>
-</head>
+<link rel="stylesheet" href="styles.css"></head>
 
 <body>
 
@@ -3518,12 +3518,12 @@ function exportCurrentPalette(){
   }).join('')+'</tr>').join('');
   const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+pal.name+'</title>'
     +'<style>body{font-family:Georgia,serif;margin:30px;color:#1e1710;}h1{font-size:20px;margin-bottom:4px;}p{font-size:12px;color:#666;margin-bottom:20px;}table{border-collapse:collapse;width:100%;}th{text-align:left;padding:6px 8px;border-bottom:2px solid #1e1710;font-size:12px;}tr:nth-child(even){background:#f8f4ee;}</style>'
-    +'</head><body>'
+    +'<link rel="stylesheet" href="styles.css"></head><body>'
     +'<h1>'+pal.name+'</h1>'
     +'<p>'+(pal.notes||'')+'<br>'+pal.colors.length+' colors &nbsp;·&nbsp; Exported '+new Date().toLocaleDateString()+'</p>'
     +'<table><thead><tr><th>Swatch</th><th>Color Name</th><th>Pigment</th><th>Brand</th><th>LF</th><th>Properties</th></tr></thead><tbody>'+rows+'</tbody></table>'
     +(pal.colors.length>=2?'<h2 style="font-size:16px;margin-top:30px;margin-bottom:10px;">Mixing Chart (first 10 colors)</h2><table style="width:auto;"><thead>'+mixHdr+'</thead><tbody>'+mixRows+'</tbody></table>':'')
-    +'</body></html>';
+    +'<script src="app.js"></script></body></html>';
   const win=window.open('about:blank','_blank');
   if(win){win.document.write(html);win.document.close();setTimeout(()=>win.print(),500);}
 }
@@ -5428,5 +5428,5 @@ function editAppName(){
   try{ localStorage.setItem('wc_app_name_prefix', next); }catch(e){}
 }
 </script>
-</body>
+<script src="app.js"></script></body>
 </html>
