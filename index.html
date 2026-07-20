@@ -331,25 +331,92 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* ── DILUTION CONSISTENCY MODAL ── */
-.modal-dilution{width:min(520px,92vw);padding:1.4rem;}
-.dilution-modal-header{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.1rem;}
-.dilution-swatch-dot{width:44px;height:44px;border-radius:50%;flex-shrink:0;border:2px solid rgba(0,0,0,0.08);box-shadow:0 2px 8px var(--shadow2);}
-.dilution-modal-titles{flex:1;min-width:0;}
-.dilution-modal-titles h2{margin-bottom:0.15rem;}
-.dilution-color-meta{font-size:0.76rem;color:var(--ink3);font-style:italic;}
-.dilution-close-btn{background:none;border:1px solid var(--border);border-radius:50%;width:30px;height:30px;flex-shrink:0;color:var(--ink3);cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center;transition:all 0.13s;}
-.dilution-close-btn:hover{border-color:var(--rust);color:var(--rust);}
+.modal-chip{width:min(480px,92vw);padding:0;overflow:hidden;max-height:88vh;display:flex;flex-direction:column;}
+.chip-close-btn{
+  position:absolute;top:0.7rem;right:0.7rem;z-index:5;
+  background:rgba(0,0,0,0.35);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  border:none;color:white;border-radius:50%;width:30px;height:30px;
+  cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;
+  transition:background 0.13s;
+}
+.chip-close-btn:hover{background:rgba(0,0,0,0.55);}
+.chip-hero{position:relative;height:150px;flex-shrink:0;}
+.chip-hero canvas{position:absolute;inset:0;width:100%;height:100%;}
+.chip-custom-badge{
+  position:absolute;bottom:10px;left:10px;
+  background:rgba(28,26,22,0.75);color:var(--gold-light);
+  font-size:0.68rem;padding:3px 9px;border-radius:20px;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.chip-titleblock{padding:1.1rem 1.3rem 0;flex-shrink:0;}
+.chip-titleblock h2{font-family:'IM Fell English',serif;font-size:1.25rem;font-weight:400;color:var(--ink);}
+.chip-brand-row{display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;font-size:0.78rem;color:var(--ink3);}
+.chip-pigment-code{font-family:'Courier New',monospace;font-size:0.72rem;background:var(--paper2);padding:1px 7px;border-radius:4px;letter-spacing:0.02em;}
+
+.chip-badges{display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.9rem 1.3rem 0;flex-shrink:0;}
+.chip-badge{
+  display:flex;align-items:center;gap:0.35rem;
+  background:var(--paper2);border:1px solid var(--border2);border-radius:20px;
+  padding:0.3rem 0.7rem;font-size:0.72rem;color:var(--ink2);
+}
+.chip-badge .cb-icon{font-size:0.8rem;}
+.chip-badge.cb-lf-I{background:#e3f0e3;border-color:#c5e0c5;color:#2d5c2d;}
+.chip-badge.cb-lf-II{background:#fdf0d5;border-color:#f3dba8;color:#8a5a10;}
+.chip-badge.cb-lf-III,.chip-badge.cb-lf-IV{background:#fbe3e0;border-color:#f0bdb6;color:#9c3323;}
+.chip-badge.cb-stain-high{background:#f3e3ee;border-color:#e0bdd6;color:#7a3465;}
+.chip-badge.cb-stain-low{background:var(--paper2);}
+
+.chip-section{padding:1rem 1.3rem 0;}
+.chip-section:last-child{padding-bottom:1.2rem;}
+.chip-section-title{
+  font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);
+  margin-bottom:0.55rem;display:flex;align-items:center;gap:0.5rem;
+}
+.chip-est-tag{
+  font-size:0.58rem;letter-spacing:0.02em;text-transform:none;
+  background:rgba(176,125,32,0.12);color:var(--gold);
+  padding:1px 6px;border-radius:10px;font-style:italic;
+}
+
+.chip-dryshift-row{display:flex;gap:0.9rem;align-items:center;}
+.chip-dryshift-compare{display:flex;align-items:center;gap:0.5rem;flex-shrink:0;}
+.chip-dryshift-sample{
+  width:56px;height:56px;border-radius:var(--r-sm);
+  display:flex;align-items:flex-end;justify-content:center;
+  border:1px solid rgba(0,0,0,0.1);box-shadow:0 2px 6px var(--shadow);
+  position:relative;overflow:hidden;
+}
+.chip-dryshift-sample span{
+  font-size:0.56rem;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.35);
+  width:100%;text-align:center;padding:2px 0;text-transform:uppercase;letter-spacing:0.05em;
+}
+.chip-dryshift-wet{position:relative;}
+.chip-dryshift-wet::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.35),transparent 60%);}
+.chip-dryshift-arrow{color:var(--ink3);font-size:0.9rem;flex-shrink:0;}
+.chip-dryshift-info{flex:1;min-width:0;}
+.chip-dryshift-level{font-family:'IM Fell English',serif;font-size:0.92rem;color:var(--ink);text-transform:capitalize;}
+.chip-dryshift-desc{font-size:0.74rem;color:var(--ink2);line-height:1.5;margin-top:0.15rem;}
+
+.chip-notes-input{
+  width:100%;padding:0.6rem 0.75rem;border:1px solid var(--border);border-radius:var(--r-sm);
+  font-family:'Crimson Pro',serif;font-size:0.82rem;color:var(--ink2);background:var(--paper2);
+  outline:none;resize:none;transition:border-color 0.14s;
+}
+.chip-notes-input:focus{border-color:var(--gold);background:white;}
+
+.modal-chip{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .dilution-strip-wrap{position:relative;border-radius:var(--r-md);overflow:hidden;box-shadow:0 4px 16px var(--shadow2);border:1px solid var(--border);}
-.dilution-strip-wrap canvas{display:block;width:100%;height:120px;}
+.dilution-strip-wrap canvas{display:block;width:100%;height:100px;}
 .dilution-labels{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(0,0,0,0.06);}
 .dilution-label-cell{text-align:center;padding:0.5rem 0.3rem;background:var(--paper2);border-right:1px solid var(--border2);}
 .dilution-label-cell:last-child{border-right:none;}
 .dilution-label-name{font-family:'IM Fell English',serif;font-size:0.82rem;color:var(--ink);}
 .dilution-label-sub{font-size:0.62rem;color:var(--ink3);font-style:italic;margin-top:1px;}
-.dilution-note{font-size:0.74rem;color:var(--ink3);line-height:1.6;margin-top:1rem;}
-.dilution-note strong{color:var(--ink2);font-weight:600;}
 @media(max-width:480px){
-  .dilution-strip-wrap canvas{height:96px;}
+  .dilution-strip-wrap canvas{height:82px;}
+  .chip-hero{height:120px;}
+  .chip-dryshift-row{flex-direction:column;align-items:flex-start;gap:0.6rem;}
+
   .dilution-label-name{font-size:0.72rem;}
   .dilution-label-sub{display:none;}
 }
@@ -632,7 +699,23 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .sg-note-input:focus{border-bottom-color:var(--gold);}
 .sg-note-input::placeholder{color:var(--ink3);font-style:italic;}
 
-/* ── DUPLICATE / PALETTE ACTIONS ── */
+/* ── SWIPE TO DELETE ── */
+.swipe-row{position:relative;overflow:hidden;border-radius:inherit;}
+.swipe-backing{
+  position:absolute;inset:0;background:var(--rust);
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:1.3rem;border-radius:inherit;
+}
+.swipe-delete-label{color:white;font-family:'Crimson Pro',serif;font-size:0.82rem;font-weight:600;letter-spacing:0.02em;}
+.swipe-content{
+  position:relative;background:inherit;
+  transform:translateX(0);
+  transition:transform 0.25s cubic-bezier(0.2,0.8,0.3,1);
+  touch-action:pan-y;
+}
+.swipe-content.swiping{transition:none;}
+.swipe-row .palette-item,.swipe-row .shop-item{border-radius:inherit;}
+
 .palette-item-actions{display:flex;gap:2px;flex-shrink:0;opacity:0;transition:opacity 0.12s;}
 .palette-item:hover .palette-item-actions{opacity:1;}
 @media(hover:none){.palette-item-actions{opacity:0.7;}}
@@ -1602,22 +1685,57 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   </div>
 </div>
 
-<!-- Dilution Consistency Modal -->
+<!-- Paint Chip Detail Modal -->
 <div class="modal-bg" id="modal-dilution" onclick="if(event.target===this)closeDilutionModal()">
-  <div class="modal modal-dilution">
-    <div class="dilution-modal-header">
-      <div class="dilution-swatch-dot" id="dilution-swatch-dot"></div>
-      <div class="dilution-modal-titles">
-        <h2 id="dilution-color-name">Color Name</h2>
-        <div class="dilution-color-meta" id="dilution-color-meta">Pigment · Brand</div>
+  <div class="modal modal-chip">
+    <button class="chip-close-btn" onclick="closeDilutionModal()" aria-label="Close">✕</button>
+
+    <div class="chip-hero">
+      <canvas id="chip-hero-canvas"></canvas>
+      <div class="chip-custom-badge" id="chip-custom-badge" style="display:none;">🧪 Custom Mix</div>
+    </div>
+
+    <div class="chip-titleblock">
+      <h2 id="chip-color-name">Color Name</h2>
+      <div class="chip-brand-row">
+        <span id="chip-brand"></span>
+        <span class="chip-pigment-code" id="chip-pigment"></span>
       </div>
-      <button class="dilution-close-btn" onclick="closeDilutionModal()" aria-label="Close">✕</button>
     </div>
-    <div class="dilution-strip-wrap">
-      <canvas id="dilution-strip-canvas"></canvas>
-      <div class="dilution-labels" id="dilution-labels"></div>
+
+    <div class="chip-badges" id="chip-badges"></div>
+
+    <div class="chip-section">
+      <div class="chip-section-title">Dry Shift <span class="chip-est-tag">estimated</span></div>
+      <div class="chip-dryshift-row">
+        <div class="chip-dryshift-compare">
+          <div class="chip-dryshift-sample chip-dryshift-wet" id="chip-wet-sample">
+            <span>Wet</span>
+          </div>
+          <div class="chip-dryshift-arrow">→</div>
+          <div class="chip-dryshift-sample chip-dryshift-dry" id="chip-dry-sample">
+            <span>Dry</span>
+          </div>
+        </div>
+        <div class="chip-dryshift-info">
+          <div class="chip-dryshift-level" id="chip-dryshift-level"></div>
+          <div class="chip-dryshift-desc" id="chip-dryshift-desc"></div>
+        </div>
+      </div>
     </div>
-    <p class="dilution-note">Mixing consistency, left to right: <strong>Cream</strong> (heavy body, straight from the pan) → <strong>Milk</strong> → <strong>Coffee</strong> → <strong>Tea</strong> (a light glaze, mostly water). This is a rendered approximation — actual results vary with paper, water hardness, and how the pigment itself behaves.</p>
+
+    <div class="chip-section">
+      <div class="chip-section-title">Dilution Consistency <span class="chip-est-tag">rendered</span></div>
+      <div class="dilution-strip-wrap">
+        <canvas id="dilution-strip-canvas"></canvas>
+        <div class="dilution-labels" id="dilution-labels"></div>
+      </div>
+    </div>
+
+    <div class="chip-section">
+      <div class="chip-section-title">Notes</div>
+      <textarea class="chip-notes-input" id="chip-notes-input" rows="2" placeholder="Add a note about this paint…"></textarea>
+    </div>
   </div>
 </div>
 
@@ -1630,6 +1748,60 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 // ══════════════════════════════════════════════════════════════
 function fade(t){return t*t*t*(t*(t*6-15)+10);}
 function lerp(a,b,t){return a+t*(b-a);}
+
+// ── STAINING & DRY-SHIFT ESTIMATION ──────────────────────────────────────
+// The color database doesn't carry per-pigment staining/dry-shift ratings
+// (there's no single universally-agreed source for either across 570+
+// paints), so both are estimated from well-documented, general watercolor
+// pigment chemistry rather than invented per swatch. Both are labelled
+// "estimated" in the UI — they're a reasonable field guide, not lab data.
+//
+// Staining: modern synthetic organic pigments (phthalocyanines, quinacridones,
+// most PY/PO/PR dye-derived colors, anything in the 100+ pigment index
+// numbers) are documented as staining — they bond into the paper fiber and
+// resist lifting. Traditional earths, cadmiums, and mineral/inorganic
+// pigments (low pigment index numbers, iron oxides, ultramarines, cobalts)
+// lift comparatively easily. This is genuinely predictable from the pigment
+// code family, not arbitrary.
+const STAINING_PIGMENT_FAMILIES = ['PB15','PG7','PG36','PV19','PR122','PR206','PR209','PO48','PO49','PY150','PY154','PY175','PBr25','PB60'];
+const NONSTAINING_PIGMENT_FAMILIES = ['PW6','PY35','PY37','PY42','PR101','PBr7','PB29','PB28','PG18','PG50','PBk11','PBk6','PBk7'];
+function estimateStaining(pigmentCodes){
+  if(!pigmentCodes) return 'moderate';
+  const codes=pigmentCodes.split('+').map(s=>s.trim());
+  let stainHits=0, nonHits=0;
+  codes.forEach(code=>{
+    if(STAINING_PIGMENT_FAMILIES.some(f=>code.startsWith(f))) stainHits++;
+    else if(NONSTAINING_PIGMENT_FAMILIES.some(f=>code.startsWith(f))) nonHits++;
+    else {
+      // Fall back to pigment index NUMBER: modern organics tend to run
+      // higher (dye-chemistry pigments registered later); classic
+      // earths/minerals tend to run lower. Weak signal, used only when the
+      // exact code isn't in either curated list above.
+      const m=code.match(/^P[A-Z](\d+)/);
+      if(m){ const n=parseInt(m[1],10); if(n>=90) stainHits++; else if(n<=50) nonHits++; }
+    }
+  });
+  if(stainHits>nonHits) return 'high';
+  if(nonHits>stainHits) return 'low';
+  return 'moderate';
+}
+// Dry-shift: watercolor reliably dries lighter than it looks wet because
+// water scatters less light than air once it evaporates. The SIZE of that
+// shift is well documented to correlate with two things already in the
+// database: granulating pigments (heavier mineral particles, more surface
+// scatter as they dry) shift MORE; and opaque/semi-opaque pigments (more
+// particulate, less pure dye-in-solution) shift more than fully transparent
+// staining washes, which barely shift at all.
+function estimateDryShift(transparency, gran){
+  let score=0;
+  if(transparency==='O') score+=2;
+  else if(transparency==='ST') score+=1;
+  if(gran) score+=2;
+  if(score>=3) return {level:'strong', pct:'35–45%', desc:'Dries noticeably lighter — mix darker than looks right while wet.'};
+  if(score>=1) return {level:'moderate', pct:'20–30%', desc:'Dries somewhat lighter than the wet wash.'};
+  return {level:'minimal', pct:'10–15%', desc:'Dries close to its wet appearance — a reliable staining wash.'};
+}
+
 const _P=[];
 (()=>{const s=Array.from({length:256},(_,i)=>i);for(let i=255;i>0;i--){const j=Math.floor(Math.random()*(i+1));[s[i],s[j]]=[s[j],s[i]];}for(let i=0;i<512;i++)_P[i]=s[i&255];})();
 function noise2(x,y){
@@ -2533,16 +2705,19 @@ function renderPaletteList(){
   } else {
     list.innerHTML=palettes.map(p=>{
       const swatches=p.colors.slice(0,5).map(c=>`<div class="pi-swatch" style="background:${c.hex}"></div>`).join('');
-      return`<div class="palette-item${p.id===activePaletteId?' active':''}" onclick="selectPalette('${p.id}')">
+      return`<div class="swipe-row" data-swipe-action="deletePalette(null,'${p.id}')">
+        <div class="swipe-backing"><span class="swipe-delete-label">Delete</span></div>
+        <div class="swipe-content palette-item${p.id===activePaletteId?' active':''}" onclick="selectPalette('${p.id}')">
         <div class="palette-item-swatches">${swatches}</div>
         <span class="palette-item-name">${p.name}</span>
         <span class="palette-item-count">${p.colors.length}</span>
         <div class="palette-item-actions">
-          <button class="palette-item-btn" title="Duplicate palette" onclick="duplicatePalette(event,'${p.id}')">⧉</button>
-          <button class="palette-item-btn del" title="Delete palette" onclick="deletePalette(event,'${p.id}')">✕</button>
+          <button class="palette-item-btn" title="Duplicate palette" onclick="event.stopPropagation();duplicatePalette(event,'${p.id}')">⧉</button>
+          <button class="palette-item-btn del" title="Delete palette" onclick="event.stopPropagation();deletePalette(event,'${p.id}')">✕</button>
         </div>
-      </div>`;
+      </div></div>`;
     }).join('');
+    initSwipeRows(list);
   }
   renderPaletteArea();
 }
@@ -2639,6 +2814,7 @@ function toggleMixMode(palId){
 function toggleMixSelect(palId,idx){
   const pal=palettes.find(p=>p.id===palId);
   if(!pal) return;
+  hapticTap();
   const pos=mixSelectedIdxs.indexOf(idx);
   if(pos>-1) mixSelectedIdxs.splice(pos,1);
   else {
@@ -2676,13 +2852,13 @@ function renderSwatchView(pal,content){
     return `<div class="sg-card${c.custom?' sg-custom':''}${isSelected?' sg-selected-for-mix':''}" draggable="false" data-idx="${realIdx}" data-palid="${pal.id}"${clickToSelect}>
         ${(palSortMode==='custom'&&!mixModeActive&&!c.custom)?`<button class="sg-handle" title="Drag to reorder" aria-label="Drag to reorder">⠿</button>`:''}
         ${selectOverlay}
-        <div class="sg-swatch"${mixModeActive?'':` onclick="openDilutionModal('${pal.id}',${realIdx})" title="Tap to see dilution consistency"`} style="background:${c.hex};">
+        <div class="sg-swatch"${mixModeActive?'':` onclick="openDilutionModal('${pal.id}',${realIdx})" title="Tap for full paint details"`} style="background:${c.hex};">
           <canvas id="sgc_${pal.id}_${realIdx}" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;${showPhoto?'opacity:0;':''}"></canvas>
           <div class="sg-photo${showPhoto?' visible':''}" id="sgp_${pal.id}_${realIdx}" style="${c.photo?'background-image:url('+c.photo+');':''}"></div>
           ${!mixModeActive?`<button class="sg-del" onclick="event.stopPropagation();removeFromPalette('${pal.id}',${realIdx})">✕</button>
           <button class="sg-cam" title="${hasPhoto?'Replace or remove photo':'Attach photo'}" onclick="event.stopPropagation();swatchCamAction('${pal.id}',${realIdx},${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
           <button class="sg-photo-toggle${hasPhoto?' has-photo':''}" id="sgt_${pal.id}_${realIdx}" onclick="event.stopPropagation();toggleSwatchPhoto('${pal.id}',${realIdx})" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>
-          <button class="sg-dilute-hint" title="Tap swatch to see dilution consistency">💧</button>`:''}
+          <button class="sg-dilute-hint" title="Tap swatch for full paint details">ℹ</button>`:''}
           ${c.custom?'<span class="sg-custom-badge" title="Custom mixed color">🧪 Mixed</span>':''}
         </div>
         <div class="sg-body">
@@ -3024,18 +3200,71 @@ function duplicatePalette(e,id){
 }
 
 // ── DILUTION CONSISTENCY MODAL ───────────────────────────────
+// Badge/label lookup tables for the paint chip modal
+const LF_LABELS={I:'Excellent lightfastness',II:'Very good lightfastness',III:'Fair — may fade over time',IV:'Poor — fades noticeably'};
+const TRANSPARENCY_LABELS={T:'Transparent',ST:'Semi-transparent',O:'Opaque'};
+const STAINING_LABELS={high:'Staining',moderate:'Semi-staining',low:'Lifts easily'};
+
+let _chipCurrentPalId=null, _chipCurrentIdx=null;
+
 function openDilutionModal(palId, idx){
   const pal=palettes.find(p=>p.id===palId);
   if(!pal) return;
   const c=pal.colors[idx];
   if(!c) return;
+  _chipCurrentPalId=palId; _chipCurrentIdx=idx;
 
-  document.getElementById('dilution-color-name').textContent=c.name;
-  document.getElementById('dilution-color-meta').textContent = c.custom
-    ? 'Custom mix · '+(c.mixedFrom||[]).join(' + ')
-    : (c.pigment?c.pigment+' · ':'')+(BRAND_LABELS[c.brand]||c.brand);
-  document.getElementById('dilution-swatch-dot').style.background=c.hex;
+  // ── Title block ──
+  document.getElementById('chip-color-name').textContent=c.name;
+  document.getElementById('chip-brand').textContent = c.custom ? 'Custom mix' : (BRAND_LABELS[c.brand]||c.brand);
+  const pigEl=document.getElementById('chip-pigment');
+  if(c.custom){
+    pigEl.textContent=(c.mixedFrom||[]).join(' + ');
+  } else {
+    pigEl.textContent=c.pigment||'';
+    pigEl.style.display=c.pigment?'':'none';
+  }
+  document.getElementById('chip-custom-badge').style.display=c.custom?'block':'none';
 
+  // ── Badges: transparency, granulation, staining, lightfastness ──
+  const staining=c.custom ? 'moderate' : estimateStaining(c.pigment);
+  const badges=[];
+  if(!c.custom){
+    badges.push(`<div class="chip-badge" title="${TRANSPARENCY_LABELS[c.transparency]||''}"><span class="cb-icon">◐</span>${TRANSPARENCY_LABELS[c.transparency]||c.transparency}</div>`);
+  }
+  if(c.gran) badges.push(`<div class="chip-badge" title="Granulating — settles into paper texture"><span class="cb-icon">◦◦</span>Granulating</div>`);
+  badges.push(`<div class="chip-badge cb-stain-${staining==='high'?'high':staining==='low'?'low':''}" title="Estimated from pigment chemistry"><span class="cb-icon">💧</span>${STAINING_LABELS[staining]}</div>`);
+  if(!c.custom && c.lf){
+    badges.push(`<div class="chip-badge cb-lf-${c.lf}" title="${LF_LABELS[c.lf]||''}"><span class="cb-icon">⭐</span>Lightfastness ${c.lf}</div>`);
+  }
+  if(!c.custom && c.single) badges.push(`<div class="chip-badge" title="A single pigment, not a blend"><span class="cb-icon">●</span>Single Pigment</div>`);
+  document.getElementById('chip-badges').innerHTML=badges.join('');
+
+  // ── Hero swatch ──
+  requestAnimationFrame(()=>{
+    const hero=document.getElementById('chip-hero-canvas');
+    const W=hero.parentElement.offsetWidth||440, H=150;
+    renderSwatchCanvas(hero, c.hex, c.gran, c.transparency||'ST', W, H);
+  });
+
+  // ── Dry shift ──
+  const shift=estimateDryShift(c.transparency||'ST', !!c.gran);
+  document.getElementById('chip-dryshift-level').textContent=shift.level+' shift ('+shift.pct+')';
+  document.getElementById('chip-dryshift-desc').textContent=shift.desc;
+  const wetSample=document.getElementById('chip-wet-sample'), drySample=document.getElementById('chip-dry-sample');
+  // "Wet" preview: brighten/lighten the hex to suggest a glistening wet wash;
+  // "Dry" preview: the true rendered hex, since the rest of the app already
+  // treats stored hex values as the dry/settled appearance of each paint.
+  const [wr,wg,wb]=parseHex(c.hex);
+  const wetHex=rgbToHex(lerp(wr,255,0.22),lerp(wg,255,0.22),lerp(wb,255,0.22));
+  wetSample.style.background=wetHex;
+  drySample.style.background=c.hex;
+
+  // ── Notes ──
+  const notesInput=document.getElementById('chip-notes-input');
+  notesInput.value=c.note||'';
+
+  // ── Dilution strip (existing feature, folded into the chip) ──
   const labelsWrap=document.getElementById('dilution-labels');
   labelsWrap.innerHTML=DILUTION_STOPS.map(s=>
     `<div class="dilution-label-cell"><div class="dilution-label-name">${s.label}</div><div class="dilution-label-sub">${s.sub}</div></div>`
@@ -3043,16 +3272,30 @@ function openDilutionModal(palId, idx){
 
   const modal=document.getElementById('modal-dilution');
   modal.classList.add('open');
+  hapticTap();
 
-  // Render after the modal is visible so canvas.offsetWidth is measurable
   requestAnimationFrame(()=>{
     const cv=document.getElementById('dilution-strip-canvas');
-    const W=cv.parentElement.offsetWidth||480, H=120;
-    renderDilutionStrip(cv, c.hex, c.gran, c.transparency, W, H);
+    const W=cv.parentElement.offsetWidth||440, H=100;
+    renderDilutionStrip(cv, c.hex, c.gran, c.transparency||'ST', W, H);
   });
 }
 function closeDilutionModal(){
+  // Persist any note change on close, same as the note field elsewhere in the app
+  if(_chipCurrentPalId!==null && _chipCurrentIdx!==null){
+    const notesInput=document.getElementById('chip-notes-input');
+    if(notesInput){
+      saveColorNote(_chipCurrentPalId, _chipCurrentIdx, notesInput.value);
+      // Keep the swatch card's own note field in sync without a full
+      // re-render, so it doesn't show stale text until the palette is
+      // switched away from and back.
+      const card=document.querySelector(`.sg-card[data-palid="${_chipCurrentPalId}"][data-idx="${_chipCurrentIdx}"]`);
+      const cardNoteInput=card?card.querySelector('.sg-note-input'):null;
+      if(cardNoteInput) cardNoteInput.value=notesInput.value;
+    }
+  }
   document.getElementById('modal-dilution').classList.remove('open');
+  _chipCurrentPalId=null; _chipCurrentIdx=null;
 }
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
@@ -3062,7 +3305,7 @@ document.addEventListener('keydown',e=>{
 });
 
 function deletePalette(e,id){
-  e.stopPropagation();
+  if(e) e.stopPropagation();
   if(!confirm('Delete this palette?')) return;
   palettes=palettes.filter(p=>p.id!==id);
   if(activePaletteId===id) activePaletteId=palettes.length?palettes[0].id:null;
@@ -3251,11 +3494,162 @@ function renderRef(){
 // TOAST
 // ══════════════════════════════════════════════════════════════
 let _toastTimer;
+// ══════════════════════════════════════════════════════════════
+// HAPTIC FEEDBACK
+// ══════════════════════════════════════════════════════════════
+// Centralized so every confirming action in the app gets consistent tactile
+// feedback instead of the one-off vibrate() call that used to live only in
+// the drag-mode handler. navigator.vibrate is Android/Chrome-only — iOS
+// Safari has no web vibration API at all, so these are enhancement-only and
+// silently no-op there; nothing depends on them firing.
+function hapticTap(){ try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){} }
+function hapticSuccess(){ try{ if(navigator.vibrate) navigator.vibrate([14,40,14]); }catch(e){} }
+function hapticWarning(){ try{ if(navigator.vibrate) navigator.vibrate(45); }catch(e){} }
+
+// ══════════════════════════════════════════════════════════════
+// SWIPE TO DELETE
+// ══════════════════════════════════════════════════════════════
+// Generic gesture for any ".swipe-row" — expects a ".swipe-backing" (the red
+// "Delete" layer underneath) and a ".swipe-content" (the visible row that
+// slides). The row's own data-swipe-action attribute holds a JS expression
+// string (e.g. "shopRemove(3)") that gets eval'd once the user actually
+// commits to the delete, either by swiping past the threshold and releasing
+// past a second confirm threshold, or by swiping fully open and tapping the
+// exposed red area. This mirrors the standard iOS/Android list-delete
+// pattern rather than deleting instantly on any swipe, so an accidental
+// swipe can't destroy data.
+const SWIPE_REVEAL_PX = 84;      // width of the exposed delete area once "open"
+const SWIPE_COMMIT_PX = 150;     // drag distance past which releasing auto-deletes
+let _swipeState = null;
+
+function initSwipeRows(container){
+  const rows = container.querySelectorAll('.swipe-row');
+  rows.forEach(row=>{
+    const content = row.querySelector('.swipe-content');
+    if(!content || content._swipeBound) return;
+    content._swipeBound = true;
+
+    content.addEventListener('touchstart', onSwipeStart, {passive:true});
+    content.addEventListener('touchmove', onSwipeMove, {passive:false});
+    content.addEventListener('touchend', onSwipeEnd, {passive:true});
+    content.addEventListener('touchcancel', onSwipeEnd, {passive:true});
+  });
+
+  // Tapping the exposed red backing (once a row is swiped open) deletes it —
+  // a second, deliberate confirmation tap rather than triggering on the
+  // swipe gesture alone.
+  container.querySelectorAll('.swipe-backing').forEach(backing=>{
+    if(backing._swipeBound) return;
+    backing._swipeBound = true;
+    backing.addEventListener('click', function(){
+      const row = backing.closest('.swipe-row');
+      if(row && row.classList.contains('swipe-open')) commitSwipeDelete(row);
+    });
+  });
+}
+
+function onSwipeStart(e){
+  const content = e.currentTarget;
+  const row = content.closest('.swipe-row');
+  // Close any other row that was left open before starting a new gesture
+  document.querySelectorAll('.swipe-row.swipe-open').forEach(r=>{
+    if(r!==row) closeSwipeRow(r);
+  });
+  _swipeState = {
+    row, content,
+    startX: e.touches[0].clientX,
+    startY: e.touches[0].clientY,
+    currentX: 0,
+    dragging: false,
+    axisLocked: null, // 'x' | 'y' | null — decided after a few px of movement
+  };
+}
+function onSwipeMove(e){
+  if(!_swipeState) return;
+  const dx = e.touches[0].clientX - _swipeState.startX;
+  const dy = e.touches[0].clientY - _swipeState.startY;
+
+  if(_swipeState.axisLocked===null && (Math.abs(dx)>6 || Math.abs(dy)>6)){
+    _swipeState.axisLocked = Math.abs(dx)>Math.abs(dy) ? 'x' : 'y';
+  }
+  if(_swipeState.axisLocked==='y') return; // let the page scroll vertically instead
+
+  e.preventDefault(); // horizontal swipe — take over from page scroll
+  _swipeState.dragging = true;
+  // Only allow dragging leftward (negative dx) to reveal delete; allow a
+  // little rightward rubber-band if the row is already open so it can close.
+  const already = _swipeState.row.classList.contains('swipe-open') ? -SWIPE_REVEAL_PX : 0;
+  let x = already + dx;
+  x = Math.max(-SWIPE_COMMIT_PX-30, Math.min(6, x)); // clamp with tiny overscroll give
+  _swipeState.currentX = x;
+  _swipeState.content.classList.add('swiping');
+  _swipeState.content.style.transform = 'translateX('+x+'px)';
+}
+function onSwipeEnd(){
+  if(!_swipeState) return;
+  const {row, content, currentX, dragging} = _swipeState;
+  content.classList.remove('swiping');
+
+  if(!dragging){ _swipeState=null; return; }
+
+  if(currentX <= -SWIPE_COMMIT_PX){
+    // Dragged past the commit threshold — treat release as confirmed delete
+    hapticWarning();
+    commitSwipeDelete(row);
+  } else if(currentX <= -SWIPE_REVEAL_PX/2){
+    // Dragged partway — snap fully open, waiting for a confirming tap
+    openSwipeRow(row);
+    hapticTap();
+  } else {
+    closeSwipeRow(row);
+  }
+  _swipeState=null;
+}
+function openSwipeRow(row){
+  row.classList.add('swipe-open');
+  const content = row.querySelector('.swipe-content');
+  if(content) content.style.transform = 'translateX(-'+SWIPE_REVEAL_PX+'px)';
+}
+function closeSwipeRow(row){
+  row.classList.remove('swipe-open');
+  const content = row.querySelector('.swipe-content');
+  if(content) content.style.transform = 'translateX(0)';
+}
+function commitSwipeDelete(row){
+  const action = row.getAttribute('data-swipe-action');
+  if(!action) return;
+  // Parse "fnName(arg1,arg2)" into a direct function call rather than using
+  // eval — the action strings are always simple, known calls generated by
+  // renderPaletteList/renderShoppingPage, never arbitrary user input.
+  const m = action.match(/^(\w+)\((.*)\)$/);
+  if(!m) return;
+  const fn = window[m[1]];
+  if(typeof fn !== 'function') return;
+  const args = m[2].length ? m[2].split(',').map(a=>{
+    a=a.trim();
+    if(a==='null') return null;
+    if(/^-?\d+$/.test(a)) return parseInt(a,10);
+    if(/^'.*'$/.test(a)) return a.slice(1,-1);
+    return a;
+  }) : [];
+  fn.apply(null, args);
+}
+
+
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   clearTimeout(_toastTimer);
   _toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+  // Every toast represents some confirmed action — give it matching haptic
+  // weight. Destructive/warning-sounding messages get the sharper buzz,
+  // everything else gets the light double-tap success pattern.
+  const lower=(msg||'').toLowerCase();
+  if(lower.includes('remov')||lower.includes('delet')||lower.includes('could not')||lower.includes('went wrong')||lower.includes('error')){
+    hapticWarning();
+  } else {
+    hapticSuccess();
+  }
 }
 
 
@@ -4506,7 +4900,9 @@ function renderShoppingPage(){
       var s = '<div class="shop-group-title">'+label+'</div>';
       items.forEach(function(item) {
         var realIdx = shoppingList.indexOf(item);
-        s += '<div class="shop-item'+(item.bought?' bought':'')+'" id="shopitem_'+realIdx+'">'
+        s += '<div class="swipe-row" data-swipe-action="shopRemove('+realIdx+')">'
+          + '<div class="swipe-backing"><span class="swipe-delete-label">Delete</span></div>'
+          + '<div class="swipe-content shop-item'+(item.bought?' bought':'')+'" id="shopitem_'+realIdx+'">'
           + '<button class="shop-check" onclick="shopToggle('+realIdx+')" title="'+(item.bought?'Mark to buy':'Mark as bought')+'">'
             + (item.bought ? '✓' : '○')
           + '</button>'
@@ -4520,7 +4916,7 @@ function renderShoppingPage(){
             + '<input class="shop-note-input" type="text" placeholder="Note…" value="'+(item.note||'').replace(/"/g,'&quot;')+'" onchange="shopSetNote('+realIdx+',this.value)" style="font-size:16px;">'
             + '<button class="shop-remove" onclick="shopRemove('+realIdx+')">✕</button>'
           + '</div>'
-          + '</div>';
+          + '</div></div>';
       });
       return s;
     };
@@ -4545,6 +4941,7 @@ function renderShoppingPage(){
     + '</div>';
 
   wrap.innerHTML = html;
+  initSwipeRows(wrap);
 
   // Build brand filters (every render, so they don't vanish after add/toggle/clear)
   var brands = ['all','daniel-smith','winsor-newton','schmincke','holbein','sennelier','mgraham','qor','schpirerr-farben'];
@@ -4620,6 +5017,7 @@ function shopRemove(idx) {
 function shopToggle(idx) {
   if (!shoppingList[idx]) return;
   shoppingList[idx].bought = !shoppingList[idx].bought;
+  if(shoppingList[idx].bought) hapticSuccess(); else hapticTap();
   saveShoppingList(shoppingList);
   renderShoppingPage();
 }
@@ -5426,6 +5824,20 @@ function editAppName(){
   next = next.trim() || 'My';
   el.textContent = next;
   try{ localStorage.setItem('wc_app_name_prefix', next); }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════════
+// SERVICE WORKER — offline support
+// ══════════════════════════════════════════════════════════════
+// Registered last and defensively: if this fails or isn't supported (older
+// browsers, some in-app webviews), the app still works exactly as before —
+// this only adds the ability to open with no network connection.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(err){
+      console.warn('Service worker registration failed (app still works online):', err);
+    });
+  });
 }
 </script>
 </body>
