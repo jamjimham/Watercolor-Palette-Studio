@@ -3252,11 +3252,14 @@ function openDilutionModal(palId, idx){
   document.getElementById('chip-dryshift-level').textContent=shift.level+' shift ('+shift.pct+')';
   document.getElementById('chip-dryshift-desc').textContent=shift.desc;
   const wetSample=document.getElementById('chip-wet-sample'), drySample=document.getElementById('chip-dry-sample');
-  // "Wet" preview: brighten/lighten the hex to suggest a glistening wet wash;
   // "Dry" preview: the true rendered hex, since the rest of the app already
   // treats stored hex values as the dry/settled appearance of each paint.
-  const [wr,wg,wb]=parseHex(c.hex);
-  const wetHex=rgbToHex(lerp(wr,255,0.22),lerp(wg,255,0.22),lerp(wb,255,0.22));
+  // "Wet" preview: darker and more saturated than dry, since watercolor
+  // reliably dries lighter than it looks while wet on the paper. Nudging
+  // lightness down and saturation up (rather than a flat lerp toward black)
+  // keeps it looking like a glistening wash instead of going muddy/grey.
+  const [wh,ws,wl]=hexToHsl(c.hex);
+  const wetHex=hslToHex(wh, Math.min(100, ws+8), Math.max(0, wl-16));
   wetSample.style.background=wetHex;
   drySample.style.background=c.hex;
 
