@@ -1177,7 +1177,51 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .vs-scale-cell-num{font-size:0.92rem;}
   .vs-tool-section{padding:1.1rem;}
 }
+
+/* ── MIXING: sub-tabs (Mixing Chart / Match a Color) ───────────────── */
+.mix-subtabs{display:flex;gap:0.4rem;margin-bottom:0.75rem;flex-wrap:wrap;}
+.mix-subtab{background:var(--paper2);border:1px solid var(--border);border-radius:999px;padding:0.35rem 0.85rem;font-size:0.72rem;color:var(--ink2);cursor:pointer;}
+.mix-subtab.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+/* ── MATCH A COLOR (inverse mixing solver) ──────────────────────────── */
+.match-target-row{display:flex;align-items:center;gap:0.9rem;flex-wrap:wrap;margin-bottom:0.9rem;}
+.match-target-swatch{width:56px;height:56px;border-radius:var(--r-md);border:2px solid rgba(0,0,0,0.12);box-shadow:0 2px 8px var(--shadow);flex-shrink:0;}
+.match-target-controls{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;}
+.match-hex-input{font-family:'Courier New',monospace;font-size:0.85rem;border:1px solid var(--border);border-radius:var(--r-sm);padding:0.4rem 0.6rem;width:100px;}
+.match-color-input{width:40px;height:40px;border:1px solid var(--border);border-radius:var(--r-sm);padding:0;cursor:pointer;background:none;}
+.match-find-btn{background:var(--ink);color:var(--paper);border:none;border-radius:999px;padding:0.5rem 1.1rem;font-size:0.78rem;cursor:pointer;}
+.match-note{font-size:0.7rem;color:var(--ink3);margin-bottom:0.8rem;line-height:1.5;}
+.match-results{display:flex;flex-direction:column;gap:0.6rem;}
+.match-result-card{display:flex;align-items:center;gap:0.75rem;background:white;border:1px solid var(--border);border-radius:var(--r-md);padding:0.6rem 0.75rem;box-shadow:0 1px 4px var(--shadow);}
+.match-result-swatch{width:42px;height:42px;border-radius:var(--r-sm);flex-shrink:0;border:1px solid rgba(0,0,0,0.1);}
+.match-result-info{flex:1;min-width:0;}
+.match-result-formula{font-size:0.78rem;color:var(--ink);line-height:1.4;}
+.match-result-formula b{font-weight:600;}
+.match-result-de{font-size:0.65rem;font-family:'Courier New',monospace;margin-top:2px;}
+.match-de-excellent{color:#2d7a3f;}
+.match-de-good{color:#8a6a10;}
+.match-de-rough{color:#9c4a23;}
+.match-add-btn{background:var(--paper2);border:1px solid var(--border);border-radius:999px;padding:0.4rem 0.8rem;font-size:0.68rem;color:var(--ink2);cursor:pointer;white-space:nowrap;}
+.match-empty{color:var(--ink3);font-size:0.8rem;text-align:center;padding:1.5rem;font-style:italic;}
+
+/* ── MIX STUDIO (virtual wet-on-wet practice canvas) ────────────────── */
+.brush-wrap{display:flex;flex-direction:column;gap:0.7rem;}
+.brush-note{font-size:0.7rem;color:var(--ink3);line-height:1.5;}
+.brush-canvas-shell{position:relative;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 10px var(--shadow);background:#faf7f2;touch-action:none;}
+.brush-canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;}
+.brush-controls-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;background:white;border:1px solid var(--border);border-radius:var(--r-md);padding:0.6rem 0.85rem;}
+.brush-slider-group{display:flex;align-items:center;gap:0.5rem;font-size:0.7rem;color:var(--ink2);}
+.brush-slider-group input[type="range"]{width:90px;}
+.brush-btn{background:var(--paper2);border:1px solid var(--border);border-radius:999px;padding:0.4rem 0.85rem;font-size:0.72rem;color:var(--ink2);cursor:pointer;}
+.brush-loaded-chip{display:flex;align-items:center;gap:0.4rem;font-size:0.72rem;color:var(--ink2);margin-left:auto;}
+.brush-loaded-swatch{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,0.15);flex-shrink:0;}
+.brush-tray-label{font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin:0.2rem 0 0.35rem;}
+.brush-tray{display:flex;flex-wrap:wrap;gap:0.5rem;}
+.brush-well{width:38px;height:38px;border-radius:50%;border:2px solid rgba(0,0,0,0.12);cursor:pointer;flex-shrink:0;box-shadow:0 1px 4px var(--shadow);position:relative;}
+.brush-well.loaded{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(184,148,64,0.25);}
+.brush-well[title]{}
 </style>
+
 </head>
 
 <body>
@@ -1822,6 +1866,27 @@ function fbmAniso(x,y,o=4,stretch=1.35,angle=0.35){
   return fbm(rx, ry, o);
 }
 
+// A small, precomputed tileable noise field, sampled (with wraparound) by the
+// Mix Studio brush canvas to vary how much pigment a granulating paint
+// deposits pixel-to-pixel — reusing the same fbmAniso field the static swatch
+// renderer uses, but computed once up front rather than per-stroke, since a
+// live brush can't afford a full noise evaluation per pixel per frame.
+let _granTile=null;
+const GRAN_TILE_SIZE=96;
+function granTileValue(x,y){
+  if(!_granTile){
+    _granTile=new Float32Array(GRAN_TILE_SIZE*GRAN_TILE_SIZE);
+    for(let ty=0;ty<GRAN_TILE_SIZE;ty++){
+      for(let tx=0;tx<GRAN_TILE_SIZE;tx++){
+        _granTile[ty*GRAN_TILE_SIZE+tx]=fbmAniso(tx*0.14,ty*0.14,4);
+      }
+    }
+  }
+  const xi=((Math.floor(x)%GRAN_TILE_SIZE)+GRAN_TILE_SIZE)%GRAN_TILE_SIZE;
+  const yi=((Math.floor(y)%GRAN_TILE_SIZE)+GRAN_TILE_SIZE)%GRAN_TILE_SIZE;
+  return _granTile[yi*GRAN_TILE_SIZE+xi];
+}
+
 function parseHex(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
 function rgbToHex(r,g,b){return'#'+[r,g,b].map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');}
 function mixHex(h1,h2,t){const[r1,g1,b1]=parseHex(h1),[r2,g2,b2]=parseHex(h2);return rgbToHex(r1+(r2-r1)*t,g1+(g2-g1)*t,b1+(b2-b1)*t);}
@@ -1848,6 +1913,14 @@ function mixPaintN(parts){
   });
   return rgbToHex(out[0],out[1],out[2]);
 }
+// Two-color K-M mix operating directly on 0-255 numbers rather than hex
+// strings — used by the Mix Studio brush canvas below, which calls this once
+// per pixel under the brush and can't afford string parse/format overhead
+// at interactive frame rates.
+function _kMixChannelNum(c1,c2,w2){
+  const k1=_ks(_srgbToLin(c1)), k2=_ks(_srgbToLin(c2));
+  return _linToSrgb(_ksR((1-w2)*k1 + w2*k2));
+}
 function chroma(hex){const[r,g,b]=parseHex(hex);return (Math.max(r,g,b)-Math.min(r,g,b))/255;}
 // How much a mix neutralises ("muds"). Returns {muddy, drop}.
 // Muddy = both parents are colorful but the mix lands near neutral (low absolute chroma).
@@ -1856,6 +1929,99 @@ function mudInfo(h1,h2,mixed){
   const ref=Math.max(c1,c2,0.0001);
   const drop=Math.max(0,Math.min(1,1-cm/ref));
   return {muddy:(c1>0.2 && c2>0.2 && cm<0.22), drop:drop};
+}
+
+// ── LAB COLOR DISTANCE (for the "Match a Color" solver below) ──────────
+// sRGB → CIE Lab (D65). Reuses the existing sRGB↔linear helpers above.
+// Lab distance (ΔE76) is a much better perceptual match metric than
+// comparing raw RGB — two colors can be close in RGB but look quite
+// different to the eye, or vice versa.
+function hexToLab(hex){
+  const[r0,g0,b0]=parseHex(hex);
+  const r=_srgbToLin(r0), g=_srgbToLin(g0), b=_srgbToLin(b0);
+  let x=(r*0.4124+g*0.3576+b*0.1805)/0.95047;
+  let y=(r*0.2126+g*0.7152+b*0.0722)/1.0;
+  let z=(r*0.0193+g*0.1192+b*0.9505)/1.08883;
+  const f=t=>t>0.008856?Math.cbrt(t):(7.787*t+16/116);
+  const fx=f(x),fy=f(y),fz=f(z);
+  return [116*fy-16, 500*(fx-fy), 200*(fy-fz)];
+}
+function deltaE(hexA,hexB){
+  const[l1,a1,b1]=hexToLab(hexA), [l2,a2,b2]=hexToLab(hexB);
+  return Math.sqrt((l1-l2)**2+(a1-a2)**2+(b1-b2)**2);
+}
+function deltaELabel(de){
+  if(de<2.3) return {cls:'match-de-excellent', text:'Excellent match'};   // ~JND, essentially indistinguishable
+  if(de<6) return {cls:'match-de-good', text:'Good match'};
+  if(de<12) return {cls:'match-de-rough', text:'Noticeable difference'};
+  return {cls:'match-de-rough', text:'Rough match'};
+}
+
+// ── INVERSE MIXING SOLVER ────────────────────────────────────────────
+// Given a target hex and a palette, searches single paints, 2-paint blends,
+// and (for smaller palettes) 3-paint blends for the closest achievable
+// mixes — using the same Kubelka-Munk math as the rest of the app, so a
+// recommended mix will actually render the way the app predicts.
+// Weight ratios are searched on a coarse grid then reported rounded to the
+// nearest 5%, since that's what's actually usable with a brush and pans.
+function findColorMatches(colors, targetHex, opts){
+  opts=opts||{};
+  const maxResults=opts.maxResults||6;
+  const results=[]; // {idxs:[...], weights:[...], mixedHex, de}
+
+  // n=1: does any single paint already get close?
+  colors.forEach((c,i)=>{
+    results.push({idxs:[i], weights:[1], mixedHex:c.hex, de:deltaE(c.hex,targetHex)});
+  });
+
+  // n=2: every pair, weight swept in 5% steps
+  for(let i=0;i<colors.length;i++){
+    for(let j=i+1;j<colors.length;j++){
+      let best=null;
+      for(let w=5;w<=95;w+=5){
+        const t=w/100;
+        const mixed=mixPaintN([{hex:colors[i].hex,w:1-t},{hex:colors[j].hex,w:t}]);
+        const de=deltaE(mixed,targetHex);
+        if(!best||de<best.de) best={weights:[1-t,t],mixedHex:mixed,de};
+      }
+      if(best) results.push({idxs:[i,j],weights:best.weights,mixedHex:best.mixedHex,de:best.de});
+    }
+  }
+
+  // n=3: only for smaller palettes — combinations grow fast (C(n,3)) and
+  // each combination is checked at ~21 weight splits, so this is capped to
+  // keep the search snappy on a phone.
+  if(colors.length<=22){
+    const splits=[]; // barycentric weight combos in steps of 0.2 (0,0.2,...1.0 summing to 1)
+    for(let a=0;a<=5;a++)for(let b=0;a+b<=5;b++){const cW=5-a-b;splits.push([a/5,b/5,cW/5]);}
+    for(let i=0;i<colors.length;i++){
+      for(let j=i+1;j<colors.length;j++){
+        for(let k=j+1;k<colors.length;k++){
+          let best=null;
+          splits.forEach(([wa,wb,wc])=>{
+            if(wa===0||wb===0||wc===0) return; // a 0-weight split is really an n=2 or n=1 case, already covered
+            const mixed=mixPaintN([{hex:colors[i].hex,w:wa},{hex:colors[j].hex,w:wb},{hex:colors[k].hex,w:wc}]);
+            const de=deltaE(mixed,targetHex);
+            if(!best||de<best.de) best={weights:[wa,wb,wc],mixedHex:mixed,de};
+          });
+          if(best) results.push({idxs:[i,j,k],weights:best.weights,mixedHex:best.mixedHex,de:best.de});
+        }
+      }
+    }
+  }
+
+  results.sort((a,b)=>a.de-b.de);
+  // De-dupe near-identical results (same paint set) and cap to maxResults
+  const seen=new Set();
+  const out=[];
+  for(const r of results){
+    const key=r.idxs.slice().sort((a,b)=>a-b).join(',');
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+    if(out.length>=maxResults) break;
+  }
+  return out;
 }
 
 function renderSwatchCanvas(canvas,hex,gran,transparency,W,H){
@@ -2755,9 +2921,10 @@ function renderPaletteArea(){
     </div>
     <div class="palette-header-row2">
       <div class="view-tabs">
-        <button class="view-tab${activePaletteView==='swatch'?' active':''}" onclick="setPaletteView('swatch')"><span class="vt-icon">▦</span> Swatches</button>
-        <button class="view-tab${activePaletteView==='wheel'?' active':''}" onclick="setPaletteView('wheel')"><span class="vt-icon">◔</span> Color Wheel</button>
-        <button class="view-tab${activePaletteView==='mixing'?' active':''}" onclick="setPaletteView('mixing')"><span class="vt-icon">⊞</span> Mixing Chart</button>
+        <button class="view-tab${activePaletteView==='swatch'?' active':''}" data-view="swatch" onclick="setPaletteView('swatch')"><span class="vt-icon">▦</span> Swatches</button>
+        <button class="view-tab${activePaletteView==='wheel'?' active':''}" data-view="wheel" onclick="setPaletteView('wheel')"><span class="vt-icon">◔</span> Color Wheel</button>
+        <button class="view-tab${activePaletteView==='mixing'?' active':''}" data-view="mixing" onclick="setPaletteView('mixing')"><span class="vt-icon">⊞</span> Mixing Chart</button>
+        <button class="view-tab${activePaletteView==='brush'?' active':''}" data-view="brush" onclick="setPaletteView('brush')"><span class="vt-icon">🖌</span> Mix Studio</button>
       </div>
     </div>
     <div class="palette-notes-wrap">
@@ -2772,8 +2939,7 @@ function setPaletteView(v){
   const pal=palettes.find(p=>p.id===activePaletteId);
   if(!pal) return;
   document.querySelectorAll('.view-tab').forEach(t=>{
-    const matches=t.textContent.toLowerCase().includes(v.slice(0,5));
-    t.classList.toggle('active', matches);
+    t.classList.toggle('active', t.dataset.view===v);
   });
   renderPaletteView(pal);
 }
@@ -2789,6 +2955,7 @@ function renderPaletteView(pal){
   if(activePaletteView==='swatch') renderSwatchView(pal,content);
   else if(activePaletteView==='wheel') renderWheelView(pal,content);
   else if(activePaletteView==='mixing') renderMixingView(pal,content);
+  else if(activePaletteView==='brush') renderBrushView(pal,content);
 }
 
 // ── SWATCH GRID ──────────────────────────────────────────────
@@ -3101,11 +3268,31 @@ function renderWheelView(pal,content){
 }
 
 // ── MIXING CHART ─────────────────────────────────────────────
+var mixingSubView='chart'; // 'chart' | 'match' — persists while switching palettes/tabs within a session
+var lastMatchTargetHex='#8a6a4a';
+
+function setMixingSubView(v,pal){
+  mixingSubView=v;
+  const content=document.getElementById('palette-view-content');
+  if(content) renderMixingView(pal,content);
+}
+
 function renderMixingView(pal,content){
   const colors=pal.colors;
   if(colors.length<2){
-    content.innerHTML='<div class="empty-palette-view">Add at least 2 colors to see a mixing chart.</div>';return;
+    content.innerHTML='<div class="empty-palette-view">Add at least 2 colors to see mixing tools.</div>';return;
   }
+  content.innerHTML=`<div class="mix-subtabs">
+    <button class="mix-subtab${mixingSubView==='chart'?' active':''}" onclick="setMixingSubView('chart',palettes.find(p=>p.id==='${pal.id}'))">⊞ Mixing Chart</button>
+    <button class="mix-subtab${mixingSubView==='match'?' active':''}" onclick="setMixingSubView('match',palettes.find(p=>p.id==='${pal.id}'))">🎯 Match a Color</button>
+  </div><div id="mixing-sub-content"></div>`;
+  const body=document.getElementById('mixing-sub-content');
+  if(mixingSubView==='match') renderColorMatchSub(pal,body);
+  else renderMixingChartSub(pal,body);
+}
+
+function renderMixingChartSub(pal,content){
+  const colors=pal.colors;
   // No limit — show all colors
   const cols=colors;
   const cellSize=Math.max(48, Math.min(70, Math.floor(360/cols.length)));
@@ -3150,6 +3337,341 @@ function renderMixingView(pal,content){
   });
   html+=`</tbody></table></div>`;
   content.innerHTML=html;
+}
+
+// ── MATCH A COLOR: inverse mixing solver UI ─────────────────────────
+function renderColorMatchSub(pal,content){
+  content.innerHTML=`
+    <div class="match-note">Pick a target color and this searches your palette for the closest 1-, 2-, and 3-paint mixes (using the same Kubelka-Munk math as the Mixing Chart), ranked by perceptual color distance (ΔE). Ratios are rounded to the nearest 5% — the resolution that's actually usable with a brush.</div>
+    <div class="match-target-row">
+      <div class="match-target-swatch" id="match-target-swatch" style="background:${lastMatchTargetHex};"></div>
+      <div class="match-target-controls">
+        <input type="color" class="match-color-input" id="match-color-input" value="${lastMatchTargetHex}" onchange="onMatchColorPick(this.value,'${pal.id}')">
+        <input type="text" class="match-hex-input" id="match-hex-input" value="${lastMatchTargetHex.toUpperCase()}" maxlength="7" onchange="onMatchHexTyped(this.value,'${pal.id}')">
+        <button class="match-find-btn" onclick="runColorMatch('${pal.id}')">Find Mixes</button>
+      </div>
+    </div>
+    <div class="match-results" id="match-results">
+      <div class="match-empty">Tap "Find Mixes" to search this palette.</div>
+    </div>`;
+}
+
+function onMatchColorPick(hex,palId){
+  lastMatchTargetHex=hex;
+  const hexInput=document.getElementById('match-hex-input');
+  if(hexInput) hexInput.value=hex.toUpperCase();
+  const sw=document.getElementById('match-target-swatch');
+  if(sw) sw.style.background=hex;
+}
+function onMatchHexTyped(val,palId){
+  let hex=val.trim();
+  if(!/^#/.test(hex)) hex='#'+hex;
+  if(!/^#[0-9a-fA-F]{6}$/.test(hex)){ showToast('Enter a valid hex color, e.g. #8a6a4a'); return; }
+  lastMatchTargetHex=hex;
+  const colorInput=document.getElementById('match-color-input');
+  if(colorInput) colorInput.value=hex;
+  const sw=document.getElementById('match-target-swatch');
+  if(sw) sw.style.background=hex;
+}
+
+function runColorMatch(palId){
+  const pal=palettes.find(p=>p.id===palId);
+  if(!pal) return;
+  const resultsEl=document.getElementById('match-results');
+  if(!resultsEl) return;
+  resultsEl.innerHTML='<div class="match-empty">Searching…</div>';
+  // Defer one tick so the "Searching…" state actually paints before the
+  // (synchronous, occasionally ~200ms) search runs.
+  setTimeout(()=>{
+    const candidates=pal.colors; // includes any custom/mixed swatches already in the palette
+    const matches=findColorMatches(candidates, lastMatchTargetHex, {maxResults:6});
+    if(!matches.length){ resultsEl.innerHTML='<div class="match-empty">No colors in this palette to search yet.</div>'; return; }
+    resultsEl.innerHTML=matches.map((m,mi)=>{
+      const label=deltaELabel(m.de);
+      const formula=m.idxs.map((idx,n)=>{
+        const pct=Math.round(m.weights[n]*100);
+        return m.idxs.length===1?`<b>${candidates[idx].name}</b> (as-is)`:`${pct}% <b>${candidates[idx].name}</b>`;
+      }).join(' + ');
+      return `<div class="match-result-card">
+        <div class="match-result-swatch" style="background:${m.mixedHex};"></div>
+        <div class="match-result-info">
+          <div class="match-result-formula">${formula}</div>
+          <div class="match-result-de ${label.cls}">${label.text} · ΔE ${m.de.toFixed(1)}</div>
+        </div>
+        ${m.idxs.length>1?`<button class="match-add-btn" onclick='addSolverMixToPalette("${pal.id}",${mi})'>+ Add to Palette</button>`:''}
+      </div>`;
+    }).join('');
+    // Stash the raw match data so "Add to Palette" doesn't need to re-run the search
+    resultsEl._lastMatches=matches;
+    resultsEl._lastCandidates=candidates;
+  },10);
+}
+
+function addSolverMixToPalette(palId,matchIndex){
+  const pal=palettes.find(p=>p.id===palId);
+  const resultsEl=document.getElementById('match-results');
+  if(!pal||!resultsEl||!resultsEl._lastMatches) return;
+  const m=resultsEl._lastMatches[matchIndex];
+  const candidates=resultsEl._lastCandidates;
+  if(!m) return;
+  const sel=m.idxs.map(i=>candidates[i]);
+  const transRank={T:0,ST:1,O:2};
+  const transp=sel.reduce((worst,c)=>transRank[c.transparency||'ST']>transRank[worst]?(c.transparency||'ST'):worst,'T');
+  const gran=sel.some(c=>c.gran);
+  const pctNames=sel.map((c,n)=>`${Math.round(m.weights[n]*100)}% ${c.name.split(' ')[0]}`).join(' + ');
+  const newColor={
+    group:'Custom', name:pctNames, brand:'custom', pigment:'', hex:m.mixedHex,
+    lf:'', transparency:transp, gran:gran, single:false, grade:'', notes:'',
+    custom:true, mixedFrom:sel.map((c,n)=>`${Math.round(m.weights[n]*100)}% ${c.name}`)
+  };
+  pal.colors.push(newColor);
+  savePalettes(palettes);
+  renderPaletteList();
+  showToast(`"${pctNames}" added to palette`);
+}
+
+// ── MIX STUDIO: live wet-on-wet virtual practice canvas ─────────────
+// A scratch pad for testing a mix before committing real paint to real
+// paper. Loads a "brush" from a well in the current palette and paints
+// onto a virtual sheet using the same Kubelka-Munk math as the rest of
+// the app — applied per-pixel in real time rather than just previewed as
+// a static swatch. Two behaviors fall out of tracking how recently each
+// area was touched: paint over a still-wet area and colors genuinely
+// fuse (wet-into-wet); paint over an area that's had time to "dry" and
+// the new color glazes translucently over it instead, the way a second
+// watercolor layer behaves over a dry first wash. The canvas itself is
+// intentionally ephemeral (not saved) — it's a rehearsal space, not
+// another place to manage files.
+var brushState={ paletteId:null, loadedIdx:null, size:22, dilution:1.0 };
+var _brush={ canvas:null, ctx:null, dpr:1, W:0, H:0, wetMap:null, wetMapW:0, wetMapH:0, drawing:false, lastX:0, lastY:0, undoStack:[] };
+const BRUSH_WET_DOWNSCALE=4;   // wetness tracked at 1/4 canvas resolution — plenty smooth, far cheaper
+const BRUSH_WET_MS=7000;       // how long an area is considered "wet" after being touched
+const BRUSH_UNDO_MAX=20;
+
+function renderBrushView(pal,content){
+  brushState.paletteId=pal.id;
+  if(brushState.loadedIdx==null || !pal.colors[brushState.loadedIdx]){
+    brushState.loadedIdx = pal.colors.length ? 0 : null;
+  }
+  content.innerHTML=`
+    <div class="brush-wrap">
+      <div class="brush-note">A practice sheet for testing a mix before it touches real paper. Paint while an area's still wet and colors fuse; give it a moment and a new color glazes over it instead, the way a dry wash behaves under a second layer. Nothing here is saved — leaving this tab clears it.</div>
+      <div class="brush-canvas-shell" id="brush-canvas-shell" style="height:min(60vw,360px);min-height:220px;">
+        <canvas class="brush-canvas" id="brush-canvas"></canvas>
+      </div>
+      <div class="brush-controls-row">
+        <div class="brush-slider-group">🖌 Size <input type="range" id="brush-size-input" min="6" max="60" value="${brushState.size}" oninput="setBrushSize(this.value)"></div>
+        <div class="brush-slider-group">💧 Water <input type="range" id="brush-dilution-input" min="15" max="100" value="${Math.round(brushState.dilution*100)}" oninput="setBrushDilution(this.value)"></div>
+        <button class="brush-btn" onclick="undoBrushStroke()">↺ Undo</button>
+        <button class="brush-btn" onclick="clearBrushCanvas()">✕ Clear</button>
+        <div class="brush-loaded-chip" id="brush-loaded-chip"></div>
+      </div>
+      <div class="brush-tray-label">Tap a well to load your brush</div>
+      <div class="brush-tray" id="brush-tray"></div>
+    </div>`;
+  renderBrushTray(pal);
+  updateBrushLoadedChip(pal);
+  requestAnimationFrame(()=>initBrushCanvas(pal));
+}
+
+function renderBrushTray(pal){
+  const tray=document.getElementById('brush-tray');
+  if(!tray) return;
+  tray.innerHTML=pal.colors.map((c,i)=>
+    `<div class="brush-well${brushState.loadedIdx===i?' loaded':''}" style="background:${c.hex};" title="${c.name}" onclick="loadBrushColor(${i})"></div>`
+  ).join('');
+}
+
+function updateBrushLoadedChip(pal){
+  const chip=document.getElementById('brush-loaded-chip');
+  if(!chip) return;
+  const c=brushState.loadedIdx!=null ? pal.colors[brushState.loadedIdx] : null;
+  chip.innerHTML=c ? `<div class="brush-loaded-swatch" style="background:${c.hex};"></div> ${c.name}` : 'No paint loaded';
+}
+
+function loadBrushColor(i){
+  brushState.loadedIdx=i;
+  const pal=palettes.find(p=>p.id===brushState.paletteId);
+  if(!pal) return;
+  hapticTap();
+  renderBrushTray(pal);
+  updateBrushLoadedChip(pal);
+}
+
+function setBrushSize(v){ brushState.size=parseInt(v,10); }
+function setBrushDilution(v){ brushState.dilution=parseInt(v,10)/100; }
+
+function initBrushCanvas(pal){
+  const shell=document.getElementById('brush-canvas-shell');
+  const canvas=document.getElementById('brush-canvas');
+  if(!shell||!canvas) return;
+  const cssW=shell.clientWidth||600, cssH=shell.clientHeight||320;
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  canvas.width=Math.round(cssW*dpr);
+  canvas.height=Math.round(cssH*dpr);
+  const ctx=canvas.getContext('2d',{willReadFrequently:true});
+  _brush.canvas=canvas; _brush.ctx=ctx; _brush.dpr=dpr;
+  _brush.W=canvas.width; _brush.H=canvas.height;
+  _brush.wetMapW=Math.ceil(_brush.W/BRUSH_WET_DOWNSCALE);
+  _brush.wetMapH=Math.ceil(_brush.H/BRUSH_WET_DOWNSCALE);
+  _brush.wetMap=new Float32Array(_brush.wetMapW*_brush.wetMapH);
+  _brush.undoStack=[];
+  paintBrushPaperBase();
+  attachBrushPointerEvents(canvas);
+}
+
+function paintBrushPaperBase(){
+  const ctx=_brush.ctx;
+  ctx.fillStyle='#faf7f2';
+  ctx.fillRect(0,0,_brush.W,_brush.H);
+  // Very faint paper grain, reusing the shared granulation noise field so it
+  // reads as the same "paper" the rest of the app renders on.
+  const img=ctx.getImageData(0,0,_brush.W,_brush.H);
+  const dat=img.data;
+  for(let y=0;y<_brush.H;y+=2){
+    for(let x=0;x<_brush.W;x+=2){
+      const gv=granTileValue(x*0.5,y*0.5);
+      const shade=Math.round(gv*4);
+      const idx=(y*_brush.W+x)*4;
+      dat[idx]=Math.min(255,Math.max(0,dat[idx]-shade));
+      dat[idx+1]=Math.min(255,Math.max(0,dat[idx+1]-shade));
+      dat[idx+2]=Math.min(255,Math.max(0,dat[idx+2]-shade));
+    }
+  }
+  ctx.putImageData(img,0,0);
+}
+
+function _brushSmoothstep(edge0,edge1,x){
+  const t=Math.min(1,Math.max(0,(x-edge0)/(edge1-edge0)));
+  return t*t*(3-2*t);
+}
+
+function markBrushWet(px,py,radius,now){
+  const mx=Math.floor(px/BRUSH_WET_DOWNSCALE), my=Math.floor(py/BRUSH_WET_DOWNSCALE);
+  const mr=Math.ceil(radius/BRUSH_WET_DOWNSCALE)+1;
+  for(let dy=-mr;dy<=mr;dy++){
+    for(let dx=-mr;dx<=mr;dx++){
+      if(dx*dx+dy*dy>mr*mr) continue;
+      const xx=mx+dx, yy=my+dy;
+      if(xx<0||yy<0||xx>=_brush.wetMapW||yy>=_brush.wetMapH) continue;
+      _brush.wetMap[yy*_brush.wetMapW+xx]=now;
+    }
+  }
+}
+function brushWetnessAt(gx,gy,now){
+  const mx=Math.floor(gx/BRUSH_WET_DOWNSCALE), my=Math.floor(gy/BRUSH_WET_DOWNSCALE);
+  if(mx<0||my<0||mx>=_brush.wetMapW||my>=_brush.wetMapH) return 0;
+  const t=_brush.wetMap[my*_brush.wetMapW+mx];
+  if(!t) return 0;
+  return Math.max(0, 1-(now-t)/BRUSH_WET_MS);
+}
+
+// Paints one circular "dab" by reading the pixels under it, K-M-mixing each
+// one against the loaded paint (weighted by wetness, dilution, edge falloff,
+// and — for granulating paints — the shared noise field), and writing the
+// result back. Runs at pixel level rather than a flat alpha overlay so wet
+// mixing and dry glazing both fall out of the same real math the rest of
+// the app uses, rather than two separately-faked effects.
+function paintBrushDab(px,py){
+  const pal=palettes.find(p=>p.id===brushState.paletteId);
+  if(!pal||brushState.loadedIdx==null) return;
+  const c=pal.colors[brushState.loadedIdx];
+  if(!c) return;
+  const ctx=_brush.ctx;
+  const radius=(brushState.size/2)*_brush.dpr;
+  const x0=Math.max(0,Math.floor(px-radius)), y0=Math.max(0,Math.floor(py-radius));
+  const x1=Math.min(_brush.W,Math.ceil(px+radius)), y1=Math.min(_brush.H,Math.ceil(py+radius));
+  const w=x1-x0, h=y1-y0;
+  if(w<=0||h<=0) return;
+  const img=ctx.getImageData(x0,y0,w,h);
+  const dat=img.data;
+  const[nr,ng,nb]=parseHex(c.hex);
+  const baseAlpha=(c.transparency==='O'?0.55:c.transparency==='ST'?0.4:0.28)*brushState.dilution;
+  const now=performance.now();
+  for(let j=0;j<h;j++){
+    for(let i=0;i<w;i++){
+      const gx=x0+i, gy=y0+j;
+      const dx=gx-px, dy=gy-py;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>radius) continue;
+      const edge=1-_brushSmoothstep(radius*0.55,radius,dist);
+      let wNew=baseAlpha*edge;
+      if(wNew<=0.003) continue;
+      const wet=brushWetnessAt(gx,gy,now);
+      wNew*=(0.55+0.45*wet); // wet-into-wet fuses fuller strength; dry areas only glaze
+      if(c.gran){
+        const gv=granTileValue(gx*0.5,gy*0.5);
+        wNew*=(0.7+0.6*Math.max(0,gv));
+      }
+      wNew=Math.min(0.96,wNew);
+      const idx=(j*w+i)*4;
+      dat[idx]  =_kMixChannelNum(dat[idx],  nr,wNew);
+      dat[idx+1]=_kMixChannelNum(dat[idx+1],ng,wNew);
+      dat[idx+2]=_kMixChannelNum(dat[idx+2],nb,wNew);
+      dat[idx+3]=255;
+    }
+  }
+  ctx.putImageData(img,x0,y0);
+  markBrushWet(px,py,radius,now);
+}
+
+function attachBrushPointerEvents(canvas){
+  function toLocal(e){
+    const rect=canvas.getBoundingClientRect();
+    const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+    return {x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY};
+  }
+  function down(e){
+    if(brushState.loadedIdx==null){ showToast('Tap a well below to load your brush'); return; }
+    e.preventDefault();
+    pushBrushUndoSnapshot();
+    _brush.drawing=true;
+    const p=toLocal(e);
+    _brush.lastX=p.x; _brush.lastY=p.y;
+    paintBrushDab(p.x,p.y);
+  }
+  function move(e){
+    if(!_brush.drawing) return;
+    e.preventDefault();
+    const p=toLocal(e);
+    const dx=p.x-_brush.lastX, dy=p.y-_brush.lastY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const radius=(brushState.size/2)*_brush.dpr;
+    const step=Math.max(2,radius*0.35);
+    const n=Math.max(1,Math.floor(dist/step));
+    for(let i=1;i<=n;i++){
+      const t=i/n;
+      paintBrushDab(_brush.lastX+dx*t, _brush.lastY+dy*t);
+    }
+    _brush.lastX=p.x; _brush.lastY=p.y;
+  }
+  function up(){ _brush.drawing=false; }
+  canvas.addEventListener('pointerdown',down);
+  canvas.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',up);
+  canvas.addEventListener('pointerleave',up);
+  canvas.addEventListener('pointercancel',up);
+}
+
+function pushBrushUndoSnapshot(){
+  if(!_brush.ctx) return;
+  try{
+    const snap=_brush.ctx.getImageData(0,0,_brush.W,_brush.H);
+    _brush.undoStack.push(snap);
+    if(_brush.undoStack.length>BRUSH_UNDO_MAX) _brush.undoStack.shift();
+  }catch(e){ /* snapshot failed — undo just won't cover this stroke */ }
+}
+function undoBrushStroke(){
+  if(!_brush.ctx || !_brush.undoStack.length){ showToast('Nothing to undo'); return; }
+  const snap=_brush.undoStack.pop();
+  _brush.ctx.putImageData(snap,0,0);
+}
+function clearBrushCanvas(){
+  if(!_brush.ctx) return;
+  pushBrushUndoSnapshot();
+  paintBrushPaperBase();
+  if(_brush.wetMap) _brush.wetMap.fill(0);
+  showToast('Canvas cleared');
 }
 
 // ── PALETTE ACTIONS ──────────────────────────────────────────
