@@ -1127,6 +1127,14 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .vs-roll-btns{display:flex;flex-direction:column;gap:0.5rem;width:100%;max-width:320px;}
 .vs-roll-btn{background:var(--paper2);border:1px solid var(--border);border-radius:999px;padding:0.6rem 1rem;font-size:0.82rem;color:var(--ink2);cursor:pointer;font-family:'Crimson Pro',serif;}
 .vs-roll-btn:hover{border-color:var(--gold2);color:var(--ink);}
+.vs-prompt-card{max-width:960px;margin:0 auto 1rem;background:white;border:1px solid var(--border);border-radius:var(--r-md);padding:1rem 1.1rem;box-shadow:0 2px 10px var(--shadow);}
+.vs-prompt-row{display:flex;align-items:center;gap:0.7rem;padding:0.4rem 0;border-bottom:1px solid var(--paper2);}
+.vs-prompt-row:last-of-type{border-bottom:none;}
+.vs-prompt-label{width:70px;flex-shrink:0;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink3);}
+.vs-prompt-value{flex:1;font-size:0.9rem;color:var(--ink);font-style:italic;}
+.vs-prompt-die{background:none;border:none;font-size:1rem;cursor:pointer;padding:0.2rem 0.4rem;flex-shrink:0;}
+.vs-prompt-actions{display:flex;gap:0.5rem;margin-top:0.7rem;}
+.vs-prompt-actions .vs-roll-btn{width:auto;max-width:none;flex:1;}
 
 /* ── Side panel ── */
 .vs-side-panel{
@@ -1525,6 +1533,36 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
           <p>Upload a photo to see it broken into clean value zones, sample individual points, and check whether it's high-key, low-key, or full range.</p>
         </div>
 
+        <!-- Prompt card: independent of photo state, so it stays available
+             whether or not a photo is loaded (fixes it disappearing once a
+             photo was selected) -->
+        <div class="vs-prompt-card" id="vs-prompt-card" style="display:none;">
+          <div class="vs-prompt-row">
+            <span class="vs-prompt-label">Subject</span>
+            <span class="vs-prompt-value" id="vs-prompt-subject">—</span>
+            <button class="vs-prompt-die" onclick="vsRerollPromptCat('subject')" title="Reroll subject">🎲</button>
+          </div>
+          <div class="vs-prompt-row">
+            <span class="vs-prompt-label">Setting</span>
+            <span class="vs-prompt-value" id="vs-prompt-setting">—</span>
+            <button class="vs-prompt-die" onclick="vsRerollPromptCat('setting')" title="Reroll setting">🎲</button>
+          </div>
+          <div class="vs-prompt-row">
+            <span class="vs-prompt-label">Object</span>
+            <span class="vs-prompt-value" id="vs-prompt-object">—</span>
+            <button class="vs-prompt-die" onclick="vsRerollPromptCat('object')" title="Reroll object">🎲</button>
+          </div>
+          <div class="vs-prompt-row">
+            <span class="vs-prompt-label">Mood</span>
+            <span class="vs-prompt-value" id="vs-prompt-mood">—</span>
+            <button class="vs-prompt-die" onclick="vsRerollPromptCat('mood')" title="Reroll mood">🎲</button>
+          </div>
+          <div class="vs-prompt-actions">
+            <button class="vs-roll-btn" onclick="vsRollAllPrompt()">🎲 Roll All Four</button>
+            <button class="vs-roll-btn" onclick="vsTogglePromptCard(false)">Hide</button>
+          </div>
+        </div>
+
         <!-- Empty state: no photo loaded yet -->
         <div class="vs-empty" id="vs-empty">
           <div class="vs-empty-icon">◑</div>
@@ -1534,8 +1572,9 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
           <div class="vs-roll-btns">
             <button class="vs-roll-btn" onclick="vsRollMaster()">🎲 Roll a Master Reference</button>
             <button class="vs-roll-btn" onclick="vsRollPhoto()">📷 Roll a Random Photo</button>
+            <button class="vs-roll-btn" onclick="vsTogglePromptCard(true)">🎲 Roll a Painting Prompt</button>
           </div>
-          <div class="vs-empty-hint">Master references are curated public-domain watercolors (Turner, Homer, Sargent, Cotman, Girtin, Cézanne) via Wikimedia Commons — good for studying how someone else handled washes and values, not for copying stroke-for-stroke.</div>
+          <div class="vs-empty-hint">Master references are curated public-domain watercolors (Turner, Homer, Sargent, Cotman, Girtin, Cézanne) via Wikimedia Commons — good for studying how someone else handled washes and values, not for copying stroke-for-stroke. A painting prompt gives you a subject/setting/object/mood combination instead of an image — for when you want to invent the reference yourself.</div>
         </div>
 
         <!-- Working state: photo loaded -->
@@ -1560,8 +1599,10 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
               </div>
             </div>
             <div class="vs-toolbar-spacer"></div>
-            <button class="vs-toolbar-btn" onclick="vsRollAgain()">🎲 Roll Another</button>
-            <button class="vs-toolbar-btn" onclick="triggerValueStudyUpload()">🔄 New Photo</button>
+            <button class="vs-toolbar-btn" onclick="vsRollMaster()">🎲 Master</button>
+            <button class="vs-toolbar-btn" onclick="vsRollPhoto()">📷 Random</button>
+            <button class="vs-toolbar-btn" onclick="vsTogglePromptCard()">🎲 Prompt</button>
+            <button class="vs-toolbar-btn" onclick="triggerValueStudyUpload()">📁 Upload</button>
             <button class="vs-toolbar-btn" onclick="downloadValueStudy()">⬇ Save Image</button>
           </div>
 
@@ -5833,6 +5874,106 @@ function vsRollAgain(){
   else vsRollMaster();
 }
 
+// ── ROLL A PAINTING PROMPT (dice mode) ──────────────────────────────
+// Ported from Reference Roll's four-dice prompt generator. Unlike master/
+// photo rolls, a prompt has no image, so it can't feed Value Study's
+// posterization — it's shown as its own small card, independent of whether
+// a photo is loaded, rather than living inside the photo workspace.
+var PROMPT_DATA = {
+  subject: [
+    'a lighthouse', 'an old barn', 'a fishing boat', 'a mountain range', 'a solitary tree',
+    'a market stall', 'a narrow alley', 'a stone bridge', 'a windmill', 'a train station platform',
+    'a garden gate', 'a farmhouse', 'a harbor at rest', 'a cathedral facade', 'a fruit stand',
+    'a snow-covered field', 'a courtyard fountain', 'a row of terraced houses', 'a lone rowboat',
+    'a mountain cabin', 'a city rooftop', 'a country crossroads', 'a vineyard hillside', 'a tide pool',
+    'a forest clearing', 'a covered bridge', "a lighthouse keeper's cottage", 'a canal with moored boats',
+    'a weathered dock', 'a hillside chapel'
+  ],
+  setting: [
+    'at dawn', 'at dusk', 'under a midday sun', 'in thick fog', 'during a passing storm',
+    'in deep winter', 'under a full moon', 'in autumn rain', 'at low tide', 'in golden hour light',
+    'under a heavy overcast sky', 'in early spring', 'at the blue hour', 'during a light snowfall',
+    'in the heat of late summer', 'just after a rainstorm', 'under a starlit sky', 'in a sudden gust of wind',
+    'at first light', 'in the last light of day', 'under scattered clouds', 'in a warm afternoon haze',
+    'during a quiet drizzle', 'at high tide'
+  ],
+  object: [
+    'a single red umbrella', 'smoke curling from a chimney', 'laundry drying on a line',
+    'a bicycle leaning against a wall', 'birds scattering into flight', 'a cat asleep in a window',
+    'reflections rippling in a puddle', 'a broken picket fence', 'string lights strung overhead',
+    'a rusted weathervane', 'a stack of split firewood', 'a door left ajar', 'a lantern hanging from a hook',
+    'a coil of rope on the dock', 'a scarecrow in the distance', 'an overturned wheelbarrow',
+    'ivy climbing a wall', 'a row of empty chairs', 'a kite caught in a tree', 'footprints in wet sand',
+    'a chalkboard sign out front', 'a stray dog crossing the road', 'moss growing on stone steps',
+    'a clothesline snapping in the wind', 'a single lit window', 'gulls circling overhead'
+  ],
+  mood: [
+    'melancholic', 'serene', 'dramatic', 'nostalgic', 'quietly tense', 'joyful', 'mysterious',
+    'hushed and still', 'bustling', 'isolated', 'romantic', 'eerie', 'triumphant', 'peaceful',
+    'foreboding', 'wistful', 'restless', 'tender', 'solemn', 'playful', 'brooding', 'hopeful',
+    'lonesome', 'electric with energy'
+  ]
+};
+var promptBags={subject:[],setting:[],object:[],mood:[]};
+var promptLastPicked={subject:null,setting:null,object:null,mood:null};
+var currentPrompt={subject:0,setting:0,object:0,mood:0};
+var _vsPromptRolledOnce=false;
+
+function vsNextPromptIndex(cat){
+  var list=PROMPT_DATA[cat];
+  if(!promptBags[cat] || promptBags[cat].length===0){
+    var bag=vsShuffledIndices(list.length);
+    if(list.length>1 && bag[bag.length-1]===promptLastPicked[cat]){
+      var swapWith=Math.floor(Math.random()*(bag.length-1));
+      var t=bag[bag.length-1]; bag[bag.length-1]=bag[swapWith]; bag[swapWith]=t;
+    }
+    promptBags[cat]=bag;
+  }
+  var idx=promptBags[cat].pop();
+  promptLastPicked[cat]=idx;
+  return idx;
+}
+
+function vsRenderPrompt(){
+  var els={
+    subject:document.getElementById('vs-prompt-subject'),
+    setting:document.getElementById('vs-prompt-setting'),
+    object:document.getElementById('vs-prompt-object'),
+    mood:document.getElementById('vs-prompt-mood')
+  };
+  Object.keys(els).forEach(function(cat){
+    if(els[cat]) els[cat].textContent=PROMPT_DATA[cat][currentPrompt[cat]];
+  });
+}
+
+function vsRollAllPrompt(){
+  currentPrompt={
+    subject:vsNextPromptIndex('subject'),
+    setting:vsNextPromptIndex('setting'),
+    object:vsNextPromptIndex('object'),
+    mood:vsNextPromptIndex('mood')
+  };
+  _vsPromptRolledOnce=true;
+  vsRenderPrompt();
+  vsTogglePromptCard(true);
+}
+
+function vsRerollPromptCat(cat){
+  currentPrompt[cat]=vsNextPromptIndex(cat);
+  vsRenderPrompt();
+}
+
+// show: true=open, false=close, undefined=toggle. Rolls a first prompt
+// automatically the very first time the card is opened, so it never shows
+// the empty "—" placeholders.
+function vsTogglePromptCard(show){
+  var card=document.getElementById('vs-prompt-card');
+  if(!card) return;
+  var willShow = show===undefined ? (card.style.display==='none') : show;
+  card.style.display = willShow ? 'block' : 'none';
+  if(willShow && !_vsPromptRolledOnce) vsRollAllPrompt();
+}
+
 // Loads an image from Wikimedia Commons or Picsum and hands it to the same
 // loadValueStudyImage() pipeline the manual-upload path uses. crossOrigin is
 // requested up front — both Commons' media servers and Picsum serve
@@ -6390,7 +6531,7 @@ function runValueStudySuggest(){
 // Exports the current view (respecting split/posterized/original) as a PNG
 // download — since photos aren't persisted in localStorage, this is the way
 // to keep a value study for reference in the field or paste into notes later.
-function downloadValueStudy(){
+async function downloadValueStudy(){
   if(!vsState.origCanvas||!vsState.postCanvas){ showToast('Load a photo first'); return; }
   var w=vsState.origCanvas.width, h=vsState.origCanvas.height;
   var out=document.createElement('canvas'); out.width=w; out.height=h;
@@ -6411,11 +6552,37 @@ function downloadValueStudy(){
     octx.fillStyle='rgba(201,152,48,0.9)';
     octx.fillRect(splitX-1,0,2,h);
   }
+  var dataUrl=out.toDataURL('image/png');
+
+  // Prefer the native share sheet where it's available — an <a download>
+  // click on a data URL is unreliable on iOS Safari (it often just opens
+  // the image in a new tab instead of saving it) and is *especially*
+  // unreliable once the app is installed to the home screen, since
+  // standalone PWAs have limited download support. The share sheet gives
+  // an explicit "Save Image" the person taps themselves, and confirms
+  // success on its own — we don't need to (and shouldn't) also toast a
+  // success message we can't actually verify.
+  if(navigator.share && navigator.canShare){
+    try{
+      var blob=await (await fetch(dataUrl)).blob();
+      var file=new File([blob],'value-study.png',{type:'image/png'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:'Value Study'});
+        return;
+      }
+    }catch(err){
+      if(err && err.name==='AbortError') return; // they cancelled the share sheet on purpose
+      // otherwise fall through to the download fallback below
+    }
+  }
+
+  // Fallback for browsers without file-sharing support (mainly desktop) —
+  // this method does work reliably there, so the toast is accurate here.
   var link=document.createElement('a');
   link.download='value-study.png';
-  link.href=out.toDataURL('image/png');
+  link.href=dataUrl;
   link.click();
-  showToast('Value study saved');
+  showToast('Value study saved to your downloads');
 }
 
 
