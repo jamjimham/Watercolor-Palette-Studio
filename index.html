@@ -5819,10 +5819,6 @@ var VS_MASTERS_WATERCOLOR = [
   { artist: 'Paul Cézanne', title: 'Undergrowth', year: '1900', file: '1900, Cézanne, Undergrowth.jpg' }
 ];
 
-function vsCommonsFilePath(filename,width){
-  return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(filename)+'?width='+width;
-}
-
 // Shuffle-bag picker (same approach as Reference Roll): draws every piece
 // once before any repeat, and nudges the reshuffle so it can't hand back
 // the piece that just showed.
@@ -5852,14 +5848,42 @@ function vsNextMasterIndex(){
 var vsRollMode=null;          // 'master' | 'photo' — remembers the last roll source for "Roll Another"
 var vsCurrentAttribution=null;
 
-function vsRollMaster(){
+// Resolves a Commons filename to its actual file URL on upload.wikimedia.org
+// via the MediaWiki API's own documented CORS support (the origin=* param
+// makes the API respond with Access-Control-Allow-Origin). This matters
+// because going through commons.wikimedia.org/wiki/Special:FilePath (a
+// redirect) turned out not to support CORS reliably for canvas reads —
+// confirmed by two failed rolls in testing — whereas a direct
+// upload.wikimedia.org file URL does; it's the same host MDN's own
+// reference documentation uses as its worked example for cross-origin
+// canvas images.
+async function vsResolveCommonsUrl(filename){
+  var api='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&prop=imageinfo&iiprop=url&iiurlwidth=900&titles='+encodeURIComponent('File:'+filename);
+  var res=await fetch(api);
+  if(!res.ok) throw new Error('Commons API request failed: '+res.status);
+  var data=await res.json();
+  var pages=data.query && data.query.pages;
+  var page=pages && Object.values(pages)[0];
+  var info=page && page.imageinfo && page.imageinfo[0];
+  if(!info || (!info.thumburl && !info.url)) throw new Error('No image URL returned for '+filename);
+  return info.thumburl || info.url;
+}
+
+async function vsRollMaster(){
   vsRollMode='master';
   var piece=VS_MASTERS_WATERCOLOR[vsNextMasterIndex()];
   vsCurrentAttribution={
     text: piece.artist+' — '+piece.title+', '+piece.year,
     link: 'https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(piece.file)
   };
-  vsLoadRemoteImage(vsCommonsFilePath(piece.file,900), "That reference couldn't be loaded — try rolling again");
+  showToast('Rolling…');
+  try{
+    var directUrl=await vsResolveCommonsUrl(piece.file);
+    vsLoadRemoteImage(directUrl, "That reference couldn't be loaded — try rolling again");
+  }catch(err){
+    console.error('Commons lookup failed:',err);
+    showToast("Couldn't reach Wikimedia Commons — try rolling again");
+  }
 }
 
 function vsRollPhoto(){
