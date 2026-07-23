@@ -1115,6 +1115,18 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   transition:opacity 0.3s;white-space:nowrap;z-index:4;
 }
 .vs-canvas-hint.hide{opacity:0;}
+.vs-attribution{
+  position:absolute;top:10px;left:10px;right:10px;
+  background:rgba(28,26,22,0.72);color:var(--paper);font-size:0.68rem;
+  padding:5px 12px;border-radius:20px;pointer-events:auto;z-index:4;
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.vs-attribution a{color:inherit;text-decoration:underline;}
+.vs-empty-divider{display:flex;align-items:center;gap:0.6rem;color:var(--ink3);font-size:0.7rem;width:100%;max-width:320px;margin:0.3rem 0;}
+.vs-empty-divider::before,.vs-empty-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.vs-roll-btns{display:flex;flex-direction:column;gap:0.5rem;width:100%;max-width:320px;}
+.vs-roll-btn{background:var(--paper2);border:1px solid var(--border);border-radius:999px;padding:0.6rem 1rem;font-size:0.82rem;color:var(--ink2);cursor:pointer;font-family:'Crimson Pro',serif;}
+.vs-roll-btn:hover{border-color:var(--gold2);color:var(--ink);}
 
 /* ── Side panel ── */
 .vs-side-panel{
@@ -1154,6 +1166,20 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 
 .vs-key-reading{font-size:0.76rem;color:var(--ink2);line-height:1.6;}
 .vs-key-reading b{color:var(--ink);font-weight:600;}
+.vs-suggest-controls{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap;}
+.vs-suggest-controls select{font-family:'Crimson Pro',serif;font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:3px;background:white;outline:none;color:var(--ink);flex:1;min-width:0;}
+.vs-suggest-results{display:flex;flex-direction:column;gap:0.5rem;}
+.vs-suggest-empty{color:var(--ink3);font-size:0.74rem;font-style:italic;line-height:1.5;}
+.vs-suggest-card{display:flex;align-items:center;gap:0.5rem;background:white;border:1px solid var(--border);border-radius:var(--r-sm);padding:0.4rem 0.5rem;}
+.vs-suggest-target{width:26px;height:26px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,0.12);}
+.vs-suggest-arrow{color:var(--ink3);font-size:0.75rem;flex-shrink:0;}
+.vs-suggest-match-swatch{width:26px;height:26px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1);}
+.vs-suggest-info{flex:1;min-width:0;}
+.vs-suggest-formula{font-size:0.72rem;color:var(--ink);line-height:1.35;}
+.vs-suggest-formula b{font-weight:600;}
+.vs-suggest-de{font-size:0.62rem;font-family:'Courier New',monospace;margin-top:1px;}
+.vs-suggest-warn{background:#fbf1e0;border:1px solid #e0c48a;border-radius:var(--r-sm);padding:0.55rem 0.65rem;font-size:0.72rem;color:#7a5a1a;line-height:1.5;margin-top:0.2rem;}
+.vs-suggest-ok{background:#eef6ee;border:1px solid #b9d9b9;border-radius:var(--r-sm);padding:0.55rem 0.65rem;font-size:0.72rem;color:#2d5a2d;line-height:1.5;margin-top:0.2rem;}
 
 @media(max-width:860px){
   .vs-main{flex-direction:column;}
@@ -1504,6 +1530,12 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
           <div class="vs-empty-icon">◑</div>
           <button class="vs-upload-btn" onclick="triggerValueStudyUpload()">📁 Choose a Photo</button>
           <div class="vs-empty-hint">Pick any photo from your library — landscapes and still life with clear light and shadow work best.</div>
+          <div class="vs-empty-divider"><span>or</span></div>
+          <div class="vs-roll-btns">
+            <button class="vs-roll-btn" onclick="vsRollMaster()">🎲 Roll a Master Reference</button>
+            <button class="vs-roll-btn" onclick="vsRollPhoto()">📷 Roll a Random Photo</button>
+          </div>
+          <div class="vs-empty-hint">Master references are curated public-domain watercolors (Turner, Homer, Sargent, Cotman, Girtin, Cézanne) via Wikimedia Commons — good for studying how someone else handled washes and values, not for copying stroke-for-stroke.</div>
         </div>
 
         <!-- Working state: photo loaded -->
@@ -1528,6 +1560,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
               </div>
             </div>
             <div class="vs-toolbar-spacer"></div>
+            <button class="vs-toolbar-btn" onclick="vsRollAgain()">🎲 Roll Another</button>
             <button class="vs-toolbar-btn" onclick="triggerValueStudyUpload()">🔄 New Photo</button>
             <button class="vs-toolbar-btn" onclick="downloadValueStudy()">⬇ Save Image</button>
           </div>
@@ -1539,6 +1572,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
               <div class="vs-split-handle" id="vs-split-handle"></div>
               <div class="vs-sample-marker" id="vs-sample-marker" style="display:none;"></div>
               <div class="vs-canvas-hint" id="vs-canvas-hint">Tap anywhere on the photo to sample a value</div>
+              <div class="vs-attribution" id="vs-attribution" style="display:none;"></div>
             </div>
 
             <div class="vs-side-panel">
@@ -1560,6 +1594,17 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
               <div class="vs-panel-block">
                 <div class="vs-panel-title">Reading</div>
                 <div class="vs-key-reading" id="vs-key-reading"></div>
+              </div>
+
+              <div class="vs-panel-block" id="vs-suggest-block">
+                <div class="vs-panel-title">Suggest a Palette</div>
+                <div class="vs-suggest-controls">
+                  <select id="vs-suggest-palette-sel"></select>
+                  <button class="vs-toolbar-btn" onclick="runValueStudySuggest()">🎨 Suggest</button>
+                </div>
+                <div class="vs-suggest-results" id="vs-suggest-results">
+                  <div class="vs-suggest-empty">Pick a palette above, then tap Suggest to match this photo's dominant colors against paints you own — and check whether your darks reach far enough.</div>
+                </div>
               </div>
             </div>
           </div>
@@ -5630,6 +5675,7 @@ function renderValueStudyPage(){
   // The reference scale chart is static content — build it once, the first
   // time this page is ever shown, rather than on every navigation to it.
   if(!_vsScaleChartBuilt){ renderValueStudyScaleChart(); _vsScaleChartBuilt=true; }
+  populateVsSuggestSelect();
   // Nothing else to do until a photo is loaded — the empty state is already
   // in the DOM. If we're returning to this page with a photo already loaded
   // (e.g. switching tabs and back), just make sure the canvases are current.
@@ -5659,6 +5705,167 @@ function renderValueStudyScaleChart(){
       +'</div>';
   }
   wrap.innerHTML=cells;
+}
+
+// ── ROLL A REFERENCE ─────────────────────────────────────────────────
+// Ported from the standalone Reference Roll app so rolling a reference and
+// analyzing its values are one flow instead of two apps and a screenshot in
+// between. Only the "master" (curated public-domain watercolors) and
+// "photo" (random stock photo) sources are wired in here — "prompt" mode in
+// Reference Roll generates a text prompt with no image, so it has nothing
+// for Value Study to analyze and stays out of scope for this integration.
+
+// Curated public-domain watercolors, verified Wikimedia Commons filenames —
+// identical list to Reference Roll's MASTERS_WATERCOLOR, so a piece you've
+// seen there will show up here too.
+var VS_MASTERS_WATERCOLOR = [
+  { artist: 'J.M.W. Turner', title: 'Heidelberg with a Rainbow', year: '1840', file: 'Joseph Mallord William Turner - Heidelberg with a Rainbow, 1840.jpg' },
+  { artist: 'J.M.W. Turner', title: 'Bell Rock Lighthouse', year: 'c.1819', file: 'Joseph Mallord William Turner - Bell Rock Lighthouse - Google Art Project.jpg' },
+  { artist: 'J.M.W. Turner', title: 'Lucerne from the Lake', year: 'c.1841', file: 'Joseph Mallord William Turner - Lucerne from the Lake - Google Art Project.jpg' },
+  { artist: 'J.M.W. Turner', title: 'Rheinfall (Rhine Falls)', year: '1841', file: 'William Turner Rheinfall 1841.jpg' },
+  { artist: 'J.M.W. Turner', title: 'Venice from Fusina', year: '1821', file: 'J.M.W. Turner - Venice from Fusina (1821).jpg' },
+  { artist: 'J.M.W. Turner', title: 'The Sarner See, Evening', year: 'c.1842', file: 'JMW Turner, The Sarner See (Lake Sarnen), Evening c.1842, watercolor.jpg' },
+  { artist: 'J.M.W. Turner', title: 'The Chain Pier at Brighton', year: 'c.1828', file: 'JMW Turner, The Chain Pier at Brighton, Royal Pavilion.jpg' },
+  { artist: 'J.M.W. Turner', title: 'Fishmarket on the Sands, Early Morning', year: '1824', file: "JMW Turner's watercolour, 'Fishmarket on the Sands, Early Morning 1824'.jpg" },
+  { artist: 'Winslow Homer', title: 'The Gulf Stream', year: '1899', file: 'Winslow Homer - The Gulf Stream (watercolour).jpg' },
+  { artist: 'Winslow Homer', title: 'Sunset at Gloucester', year: '1880', file: 'Winslow Homer - Sunset at Gloucester.jpg' },
+  { artist: 'Winslow Homer', title: 'Rowboat', year: '1880', file: 'Winslow Homer - Rowboat.jpg' },
+  { artist: 'Winslow Homer', title: 'The Milk Maid', year: '1878', file: 'Winslow Homer - The Milk Maid (1878).jpg' },
+  { artist: 'Winslow Homer', title: 'Boy in a Boatyard', year: '1873', file: 'Winslow Homer - Boy in a Boatyard.jpg' },
+  { artist: 'Winslow Homer', title: 'After the Hurricane, Bahamas', year: '1899', file: 'Winslow Homer - After the Hurricane, Bahamas.jpg' },
+  { artist: 'Winslow Homer', title: 'Fishing', year: '1878', file: 'Winslow Homer - Fishing (1878).jpg' },
+  { artist: 'Winslow Homer', title: 'Boy Fishing', year: '1892', file: 'Winslow Homer - Boy Fishing (1892).jpg' },
+  { artist: 'Winslow Homer', title: 'The Blue Boat', year: '1892', file: 'Winslow Homer - The Blue Boat - Google Art Project.jpg' },
+  { artist: 'Winslow Homer', title: 'Hound and Hunter (sketch)', year: 'c.1892', file: 'Winslow Homer - Hound and Hunter (sketch).jpg' },
+  { artist: 'Winslow Homer', title: 'Deer Drinking', year: 'c.1892', file: 'Winslow Homer - Deer Drinking.jpg' },
+  { artist: 'Winslow Homer', title: 'Old Friends', year: 'c.1894', file: 'Winslow Homer - Old Friends.jpg' },
+  { artist: 'Winslow Homer', title: 'Adirondacks Guide', year: '1894', file: 'Winslow Homer - Adirondacks Guide.jpg' },
+  { artist: 'Winslow Homer', title: 'Campfire, Adirondacks', year: 'c.1892', file: 'Winslow Homer - Campfire, Adirondacks.jpg' },
+  { artist: 'John Singer Sargent', title: 'Above Lake Garda at San Vigilio', year: 'c.1913', file: 'John Singer Sargent - Above Lake Garda at San Vigilio.jpg' },
+  { artist: 'John Singer Sargent', title: 'Corfu, Lights and Shadows', year: 'c.1909', file: 'John Singer Sargent - Corfu, lights and shadows.jpg' },
+  { artist: 'John Singer Sargent', title: 'Cottage at Fairford, Gloucestershire', year: 'c.1917', file: 'John Singer Sargent - Cottage at Fairford, Gloucestershire.jpg' },
+  { artist: 'John Singer Sargent', title: 'Fog above Lake Garda at San Vigilio', year: '1913', file: 'John Singer Sargent - Fog above lake Garda at San Vigilio 1913.jpg' },
+  { artist: 'John Singer Sargent', title: 'San Vigilio', year: '1913', file: 'John Singer Sargent - San Vigilio 1913.jpg' },
+  { artist: 'John Singer Sargent', title: 'Scuola Grande di San Rocco', year: 'c.1903', file: 'John Singer Sargent - Scuola Grande di San Rocco.jpg' },
+  { artist: 'John Singer Sargent', title: 'Spanish Fountain', year: 'c.1912', file: 'John Singer Sargent - Spanish Fountain.jpg' },
+  { artist: 'John Singer Sargent', title: 'The Jetty at San Vigilio', year: '1913', file: 'John Singer Sargent - The Jetty at San Vigilio 1913.jpg' },
+  { artist: 'John Singer Sargent', title: 'Under the Willows', year: 'c.1917', file: 'John Singer Sargent - Under the Willows - Google Art Project.jpg' },
+  { artist: 'John Singer Sargent', title: 'Muddy Alligators', year: '1917', file: 'Sargent - Muddy Alligators.jpg' },
+  { artist: 'John Singer Sargent', title: 'View from a Window, Genoa', year: 'undated', file: 'John Singer Sargent - View from a Window, Genoa.jpg' },
+  { artist: 'John Singer Sargent', title: 'A Venetian Trattoria', year: 'c.1903', file: 'Sargent - A Venetian Trattoria, c. 1902-1903, Cat. 1079.jpg' },
+  { artist: 'John Singer Sargent', title: 'Boats at Anchor', year: '1917', file: 'Sargent - Boats at Anchor, 1917, 1917.90.jpg' },
+  { artist: 'John Sell Cotman', title: 'A Ruined House', year: 'c.1808', file: 'A Ruined House by John Sell Cotman, watercolor.jpg' },
+  { artist: 'John Sell Cotman', title: 'Spanish Chestnut Tree, Struck by Lightning', year: 'c.1808', file: 'Spanish Chestnut Tree, Struck by Lightning by John Sell Cotman.jpg' },
+  { artist: 'John Sell Cotman', title: 'A Windmill', year: 'c.1828', file: 'John Sell Cotman, A Windmill, c. 1828. watercolor.jpg' },
+  { artist: 'John Sell Cotman', title: "St. Benet's Abbey", year: 'c.1831', file: "John Sell Cotman - St. Benet's Abbey - Google Art Project.jpg" },
+  { artist: 'John Sell Cotman', title: 'Castle at Alençon', year: 'undated', file: 'John Sell Cotman - Castle at Alencon - Google Art Project.jpg' },
+  { artist: 'John Sell Cotman', title: 'A Castle Tower (Caernarvon Castle)', year: 'undated', file: 'John Sell Cotman - A Castle Tower (Caernarvon Castle) - Google Art Project.jpg' },
+  { artist: 'John Sell Cotman', title: 'Mountainous Landscape, North Wales', year: 'undated', file: 'John Sell Cotman - Mountainous Landscape, North Wales - Google Art Project.jpg' },
+  { artist: 'John Sell Cotman', title: 'Boats at Anchor on Breydon Water', year: 'undated', file: 'Boats at Anchor on Breydon Water - John Sell Cotman.jpg' },
+  { artist: 'Thomas Girtin', title: 'Romantic Landscape', year: 'c.1798', file: 'Thomas Girtin - Romantic Landscape - Google Art Project.jpg' },
+  { artist: 'Thomas Girtin', title: 'View of Rochester', year: 'c.1798', file: 'Thomas Girtin - View of Rochester - Google Art Project.jpg' },
+  { artist: 'Thomas Girtin', title: 'Dover', year: 'c.1798', file: 'Thomas Girtin - Dover - Google Art Project.jpg' },
+  { artist: 'Thomas Girtin', title: 'Tynemouth Priory, Northumberland', year: 'c.1793', file: 'Thomas Girtin - Tynemouth Priory, Northumberland - Google Art Project.jpg' },
+  { artist: 'Thomas Girtin', title: 'Lyme Regis, Dorset', year: 'undated', file: 'Thomas Girtin - Lyme Regis, Dorset - Google Art Project.jpg' },
+  { artist: 'Thomas Girtin', title: 'Jedburgh Abbey from the South East', year: '1798', file: 'Thomas Girtin - Jedburgh Abbey from the South East - Google Art Project.jpg' },
+  { artist: 'Paul Cézanne', title: 'Landscape with Trees', year: 'undated', file: 'Paul Cézanne- Landscape with Trees.jpg' },
+  { artist: 'Paul Cézanne', title: 'Well and Winding Path in the Park of Château Noir', year: 'undated', file: 'Paul Cézanne- Well and Winding Path in the Park of Château Noir.jpg' },
+  { artist: 'Paul Cézanne', title: 'Rocks at Bibémus', year: '1887', file: '1887, Cézanne, Rocks at Bibémus.jpg' },
+  { artist: 'Paul Cézanne', title: 'Forest Interior', year: '1890', file: '1890, Cézanne, Forest Interior.jpg' },
+  { artist: 'Paul Cézanne', title: 'House in Provence', year: '1890', file: '1890, Cézanne, House in Provence.jpg' },
+  { artist: 'Paul Cézanne', title: 'Mont Sainte Victoire', year: '1900', file: '1900, Cézanne, Mont Sainte Victoire.jpg' },
+  { artist: 'Paul Cézanne', title: 'Path, Trees, and Walls', year: '1900', file: '1900, Cézanne, Path, Trees, and Walls.jpg' },
+  { artist: 'Paul Cézanne', title: 'Undergrowth', year: '1900', file: '1900, Cézanne, Undergrowth.jpg' }
+];
+
+function vsCommonsFilePath(filename,width){
+  return 'https://commons.wikimedia.org/wiki/Special:FilePath/'+encodeURIComponent(filename)+'?width='+width;
+}
+
+// Shuffle-bag picker (same approach as Reference Roll): draws every piece
+// once before any repeat, and nudges the reshuffle so it can't hand back
+// the piece that just showed.
+var _vsMasterBag=[], _vsMasterLast=-1;
+function vsShuffledIndices(n){
+  var arr=[]; for(var i=0;i<n;i++) arr.push(i);
+  for(var j=arr.length-1;j>0;j--){
+    var k=Math.floor(Math.random()*(j+1));
+    var t=arr[j]; arr[j]=arr[k]; arr[k]=t;
+  }
+  return arr;
+}
+function vsNextMasterIndex(){
+  if(_vsMasterBag.length===0){
+    var bag=vsShuffledIndices(VS_MASTERS_WATERCOLOR.length);
+    if(VS_MASTERS_WATERCOLOR.length>1 && bag[bag.length-1]===_vsMasterLast){
+      var swapWith=Math.floor(Math.random()*(bag.length-1));
+      var t=bag[bag.length-1]; bag[bag.length-1]=bag[swapWith]; bag[swapWith]=t;
+    }
+    _vsMasterBag=bag;
+  }
+  var idx=_vsMasterBag.pop();
+  _vsMasterLast=idx;
+  return idx;
+}
+
+var vsRollMode=null;          // 'master' | 'photo' — remembers the last roll source for "Roll Another"
+var vsCurrentAttribution=null;
+
+function vsRollMaster(){
+  vsRollMode='master';
+  var piece=VS_MASTERS_WATERCOLOR[vsNextMasterIndex()];
+  vsCurrentAttribution={
+    text: piece.artist+' — '+piece.title+', '+piece.year,
+    link: 'https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(piece.file)
+  };
+  vsLoadRemoteImage(vsCommonsFilePath(piece.file,900), 'That reference could not be loaded — tap Roll Another to try a different one');
+}
+
+function vsRollPhoto(){
+  vsRollMode='photo';
+  vsCurrentAttribution=null;
+  var seed=Math.floor(Math.random()*1e9);
+  vsLoadRemoteImage('https://picsum.photos/seed/'+seed+'/900/900', 'That photo could not be loaded — tap Roll Another to try a different one');
+}
+
+function vsRollAgain(){
+  if(vsRollMode==='photo') vsRollPhoto();
+  else vsRollMaster();
+}
+
+// Loads an image from Wikimedia Commons or Picsum and hands it to the same
+// loadValueStudyImage() pipeline the manual-upload path uses. crossOrigin is
+// requested up front — both Commons' media servers and Picsum serve
+// permissive CORS headers on their images, so this avoids tainting the
+// canvas rather than discovering the problem at getImageData() time.
+function vsLoadRemoteImage(url,failMsg){
+  showToast('Rolling…');
+  var img=new Image();
+  img.crossOrigin='anonymous';
+  img.onload=function(){
+    try{
+      loadValueStudyImage(img);
+      renderVsAttribution();
+    }catch(err){
+      console.error('Value Study remote load failed:',err);
+      showToast('Could not analyze that reference — tap Roll Another to try a different one');
+    }
+  };
+  img.onerror=function(){
+    showToast(failMsg);
+  };
+  img.src=url;
+}
+
+function renderVsAttribution(){
+  var el=document.getElementById('vs-attribution');
+  if(!el) return;
+  if(vsCurrentAttribution){
+    el.style.display='block';
+    el.innerHTML='<a href="'+vsCurrentAttribution.link+'" target="_blank" rel="noopener">'+vsCurrentAttribution.text+'</a> · public domain, via Wikimedia Commons';
+  } else {
+    el.style.display='none';
+  }
 }
 
 function triggerValueStudyUpload(){
@@ -5691,7 +5898,10 @@ function triggerValueStudyUpload(){
         };
         img.onload=function(){
           try{
+            vsRollMode=null;
+            vsCurrentAttribution=null;
             loadValueStudyImage(img);
+            renderVsAttribution();
           }catch(err){
             console.error('Value Study load failed:', err);
             showToast('Something went wrong loading that photo — try a smaller or different image');
@@ -6027,6 +6237,154 @@ function renderValueStudyReading(){
   var domLabel=labels[dominant]||('Zone '+(dominant+1));
 
   wrap.innerHTML='<p>'+character+'</p><p style="margin-top:0.5rem;">Most common value: <b>'+domLabel+'</b> ('+Math.round(counts[dominant]/total*100)+'% of the frame).</p>';
+}
+
+// ── SUGGEST A PALETTE: connects Value Study's photo analysis to a real ──
+// paint-shopping-list, so a reference photo turns into an actionable
+// palette plan rather than just a value diagnosis. Reuses the same
+// Kubelka-Munk matching engine as "Match a Color" in the Mixing view, and
+// the same Lab-space distance used there.
+
+function populateVsSuggestSelect(){
+  var sel=document.getElementById('vs-suggest-palette-sel');
+  if(!sel) return;
+  var cur=sel.value || activePaletteId || '';
+  sel.innerHTML='<option value="">Select a palette…</option>'+
+    palettes.map(function(p){return '<option value="'+p.id+'"'+(p.id===cur?' selected':'')+'>'+p.name+'</option>';}).join('');
+}
+
+// Samples the loaded photo and returns its most visually significant
+// colors. Pixels are bucketed into a coarse RGB grid (cheap, no true
+// k-means), then buckets that are perceptually close in Lab space get
+// folded into whichever is more dominant, so near-duplicate shades don't
+// crowd out genuinely distinct hues. Sampling is capped at ~40,000 pixels
+// regardless of photo size, since a dominant-color read doesn't need every
+// pixel and this keeps it snappy on a phone.
+function extractDominantColors(canvas,maxColors){
+  maxColors=maxColors||6;
+  var ctx=canvas.getContext('2d');
+  var w=canvas.width,h=canvas.height;
+  var data=ctx.getImageData(0,0,w,h).data;
+  var totalPx=w*h;
+  var stride=Math.max(1,Math.floor(totalPx/40000));
+  var buckets={};
+  var STEP=24;
+  var px=0;
+  for(var p=0;p<data.length;p+=4){
+    px++;
+    if(px%stride!==0) continue;
+    var r=data[p],g=data[p+1],b=data[p+2];
+    var key=Math.round(r/STEP)+','+Math.round(g/STEP)+','+Math.round(b/STEP);
+    var bucket=buckets[key];
+    if(!bucket){bucket={r:0,g:0,b:0,count:0};buckets[key]=bucket;}
+    bucket.r+=r;bucket.g+=g;bucket.b+=b;bucket.count++;
+  }
+  var list=Object.keys(buckets).map(function(k){
+    var bkt=buckets[k];
+    return {hex:rgbToHex(bkt.r/bkt.count,bkt.g/bkt.count,bkt.b/bkt.count),count:bkt.count};
+  });
+  list.sort(function(a,b){return b.count-a.count;});
+  var merged=[];
+  list.forEach(function(c){
+    var dupe=null;
+    for(var i=0;i<merged.length;i++){ if(deltaE(merged[i].hex,c.hex)<10){dupe=merged[i];break;} }
+    if(dupe) dupe.count+=c.count;
+    else merged.push({hex:c.hex,count:c.count});
+  });
+  merged.sort(function(a,b){return b.count-a.count;});
+  return merged.slice(0,maxColors);
+}
+
+// Returns roughly what luminance value (0-255, greyscale) the darkest ~2%
+// of the photo sits at — a percentile rather than the single darkest pixel,
+// so one noisy/JPEG-artifact pixel can't skew the reading. Uses a 256-bucket
+// histogram pass rather than sorting every pixel, since sorting a few
+// hundred thousand values on a phone is needlessly slow for this.
+function photoDarkestLuminance(){
+  if(!vsState.origCanvas) return null;
+  var ctx=vsState.origCanvas.getContext('2d');
+  var w=vsState.origCanvas.width,h=vsState.origCanvas.height;
+  var data=ctx.getImageData(0,0,w,h).data;
+  var hist=new Array(256).fill(0);
+  var total=0;
+  for(var p=0;p<data.length;p+=4){
+    var lum=Math.round(data[p]*0.299+data[p+1]*0.587+data[p+2]*0.114);
+    hist[lum]++;total++;
+  }
+  var target=total*0.02,acc=0;
+  for(var i=0;i<256;i++){acc+=hist[i];if(acc>=target) return i;}
+  return 255;
+}
+
+// How dark can this palette actually go? Checks both the single darkest
+// paint as-is, and a "strategic mud" mix of the palette's 3 lowest-luminance
+// paints layered together (the classic way painters reach a deep neutral
+// dark without owning a black) — and reports whichever gets darker, since
+// that's the honest ceiling on what the palette can reach.
+function paletteDarkestReach(colors){
+  if(!colors.length) return null;
+  var byLum=colors.slice().sort(function(a,b){return hexToLab(a.hex)[0]-hexToLab(b.hex)[0];});
+  var darkestSingle=byLum[0];
+  var darkTrio=byLum.slice(0,Math.min(3,byLum.length));
+  var mixedDark = darkTrio.length>1 ? mixPaintN(darkTrio.map(function(c){return {hex:c.hex,w:1};})) : darkTrio[0].hex;
+  var mixedLum=hexToLab(mixedDark)[0];
+  var singleLum=hexToLab(darkestSingle.hex)[0];
+  var best = mixedLum<singleLum ? {hex:mixedDark,lum:mixedLum,via:'mixed'} : {hex:darkestSingle.hex,lum:singleLum,via:'single'};
+  return {darkestSingle:darkestSingle,mixedDark:mixedDark,best:best};
+}
+
+function runValueStudySuggest(){
+  var sel=document.getElementById('vs-suggest-palette-sel');
+  var resultsEl=document.getElementById('vs-suggest-results');
+  if(!sel||!resultsEl) return;
+  var palId=sel.value;
+  if(!palId){ resultsEl.innerHTML='<div class="vs-suggest-empty">Pick a palette first.</div>'; return; }
+  if(!vsState.origCanvas){ resultsEl.innerHTML='<div class="vs-suggest-empty">Load a photo first.</div>'; return; }
+  var pal=palettes.find(function(p){return p.id===palId;});
+  if(!pal||!pal.colors.length){ resultsEl.innerHTML='<div class="vs-suggest-empty">That palette has no colors yet.</div>'; return; }
+
+  resultsEl.innerHTML='<div class="vs-suggest-empty">Analyzing photo…</div>';
+  setTimeout(function(){
+    var dominants=extractDominantColors(vsState.origCanvas,6);
+    var rows=dominants.map(function(d){
+      var matches=findColorMatches(pal.colors,d.hex,{maxResults:1});
+      return {target:d.hex,match:matches[0]};
+    });
+
+    var cardsHtml=rows.map(function(r){
+      var m=r.match;
+      if(!m){
+        return '<div class="vs-suggest-card"><div class="vs-suggest-target" style="background:'+r.target+';"></div>'
+          +'<div class="vs-suggest-info"><div class="vs-suggest-formula">No match found</div></div></div>';
+      }
+      var formula = m.idxs.length===1
+        ? '<b>'+pal.colors[m.idxs[0]].name+'</b>'
+        : m.idxs.map(function(idx,n){return Math.round(m.weights[n]*100)+'% <b>'+pal.colors[idx].name+'</b>';}).join(' + ');
+      var label=deltaELabel(m.de);
+      return '<div class="vs-suggest-card">'
+        +'<div class="vs-suggest-target" style="background:'+r.target+';" title="From photo"></div>'
+        +'<div class="vs-suggest-arrow">→</div>'
+        +'<div class="vs-suggest-match-swatch" style="background:'+m.mixedHex+';"></div>'
+        +'<div class="vs-suggest-info"><div class="vs-suggest-formula">'+formula+'</div>'
+        +'<div class="vs-suggest-de '+label.cls+'">'+label.text+' · ΔE '+m.de.toFixed(1)+'</div></div>'
+        +'</div>';
+    }).join('');
+
+    var reach=paletteDarkestReach(pal.colors);
+    var photoGrey=photoDarkestLuminance();
+    var warnHtml='';
+    if(reach && photoGrey!=null){
+      var photoHex=rgbToHex(photoGrey,photoGrey,photoGrey);
+      var photoDarkL=hexToLab(photoHex)[0];
+      var gap=reach.best.lum - photoDarkL;
+      if(gap>8){
+        warnHtml='<div class="vs-suggest-warn">⚠ Even '+(reach.best.via==='mixed' ? 'layering your 3 deepest paints together' : 'straight from <b>'+reach.darkestSingle.name+'</b>')+', your darkest achievable mix reads noticeably lighter than this photo\'s deepest shadows. Plan on 2–3 layered glazes to build the darks up, rather than expecting one wash to get there.</div>';
+      } else {
+        warnHtml='<div class="vs-suggest-ok">✓ This palette\'s darkest mix reaches this photo\'s shadow depth in a wash or two.</div>';
+      }
+    }
+    resultsEl.innerHTML=cardsHtml+warnHtml;
+  },10);
 }
 
 // Exports the current view (respecting split/posterized/original) as a PNG
