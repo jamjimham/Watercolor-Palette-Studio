@@ -5859,14 +5859,14 @@ function vsRollMaster(){
     text: piece.artist+' — '+piece.title+', '+piece.year,
     link: 'https://commons.wikimedia.org/wiki/File:'+encodeURIComponent(piece.file)
   };
-  vsLoadRemoteImage(vsCommonsFilePath(piece.file,900), 'That reference could not be loaded — tap Roll Another to try a different one');
+  vsLoadRemoteImage(vsCommonsFilePath(piece.file,900), "That reference couldn't be loaded — try rolling again");
 }
 
 function vsRollPhoto(){
   vsRollMode='photo';
   vsCurrentAttribution=null;
   var seed=Math.floor(Math.random()*1e9);
-  vsLoadRemoteImage('https://picsum.photos/seed/'+seed+'/900/900', 'That photo could not be loaded — tap Roll Another to try a different one');
+  vsLoadRemoteImage('https://picsum.photos/seed/'+seed+'/900/900', "That photo couldn't be loaded — try rolling again");
 }
 
 function vsRollAgain(){
@@ -5975,25 +5975,42 @@ function vsTogglePromptCard(show){
 }
 
 // Loads an image from Wikimedia Commons or Picsum and hands it to the same
-// loadValueStudyImage() pipeline the manual-upload path uses. crossOrigin is
-// requested up front — both Commons' media servers and Picsum serve
-// permissive CORS headers on their images, so this avoids tainting the
-// canvas rather than discovering the problem at getImageData() time.
-function vsLoadRemoteImage(url,failMsg){
-  showToast('Rolling…');
+// loadValueStudyImage() pipeline the manual-upload path uses.
+//
+// First attempt requests CORS (crossOrigin='anonymous') so the canvas stays
+// readable for value analysis. Wikimedia Commons' Special:FilePath doesn't
+// reliably send CORS headers, though — Reference Roll's own source has a
+// comment noting the same discovery — so if that request fails outright,
+// this retries the identical URL without requesting CORS. That second
+// attempt will reliably display the image, but if the source genuinely
+// has no CORS support, reading pixel data from it will still fail — in
+// which case loadValueStudyImage's own probe catches that and this
+// surfaces a clear "can't analyze this one" message rather than silently
+// leaving stale content on screen.
+function vsLoadRemoteImage(url,failMsg,_attempt){
+  var attempt=_attempt||0;
+  showToast(attempt===0 ? 'Rolling…' : 'Retrying…');
   var img=new Image();
-  img.crossOrigin='anonymous';
+  if(attempt===0) img.crossOrigin='anonymous';
   img.onload=function(){
     try{
       loadValueStudyImage(img);
       renderVsAttribution();
     }catch(err){
       console.error('Value Study remote load failed:',err);
-      showToast('Could not analyze that reference — tap Roll Another to try a different one');
+      if(attempt===0){
+        vsLoadRemoteImage(url,failMsg,1);
+      } else {
+        showToast("This reference can't be read for value analysis — try rolling again");
+      }
     }
   };
   img.onerror=function(){
-    showToast(failMsg);
+    if(attempt===0){
+      vsLoadRemoteImage(url,failMsg,1);
+    } else {
+      showToast(failMsg);
+    }
   };
   img.src=url;
 }
@@ -6088,7 +6105,10 @@ function loadValueStudyImage(img){
   try{
     probe = octx.getImageData(0,0,Math.min(4,w),Math.min(4,h));
   }catch(err){
-    throw new Error('Could not read image data from the photo (it may be a format the browser can\'t process here): '+err.message);
+    var isCorsIssue = err && err.name==='SecurityError';
+    throw new Error(isCorsIssue
+      ? "This image's source doesn't allow reading its pixel data here, so it can be viewed but not analyzed for values."
+      : 'Could not read image data from the photo (it may be a format the browser can\'t process here): '+err.message);
   }
   if(!probe || !probe.data || probe.data.length===0){
     throw new Error('Photo loaded but produced no image data');
