@@ -293,7 +293,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .ref-group-header h3{font-family:'IM Fell English',serif;font-size:0.95rem;font-weight:400;}
 .ref-group-count{font-size:0.63rem;color:var(--ink3);font-style:italic;}
 .ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0.75rem;}
-.ref-card{background:white;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;position:relative;box-shadow:0 2px 6px var(--shadow);transition:transform 0.14s,box-shadow 0.14s;}
+.ref-card{background:white;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;position:relative;box-shadow:0 2px 6px var(--shadow);transition:transform 0.14s,box-shadow 0.14s;cursor:pointer;}
 .ref-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px var(--shadow2);}
 .ref-swatch{height:76px;position:relative;overflow:hidden;}
 .ref-swatch canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
@@ -306,12 +306,6 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .ref-meta{display:flex;align-items:center;gap:0.28rem;}
 .ref-transp{font-size:0.57rem;color:var(--ink3);margin-left:auto;}
 .ref-brand-tag{font-size:0.55rem;color:var(--ink3);letter-spacing:0.06em;text-transform:uppercase;margin-top:0.18rem;font-style:italic;}
-.add-overlay{position:absolute;inset:0;background:rgba(61,94,59,0.93);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.45rem;opacity:0;transition:opacity 0.16s;pointer-events:none;}
-.ref-card:hover .add-overlay{opacity:1;pointer-events:all;}
-.add-overlay select{font-family:'Crimson Pro',serif;font-size:0.72rem;padding:0.22rem 0.45rem;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.12);color:white;outline:none;max-width:115px;}
-.add-overlay select option{background:#2a3d2a;color:white;}
-.add-overlay button{background:white;color:var(--sage);border:none;padding:0.24rem 0.8rem;border-radius:var(--r-sm);font-family:'Crimson Pro',serif;font-size:0.72rem;font-weight:600;cursor:pointer;transition:background 0.13s;}
-.add-overlay button:hover{background:var(--paper);}
 .no-ref-results{text-align:center;padding:3rem;color:var(--ink3);font-style:italic;}
 
 .modal-bg{position:fixed;inset:0;background:rgba(28,26,22,0.55);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity 0.2s;}
@@ -351,6 +345,11 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
 .chip-titleblock{padding:1.1rem 1.3rem 0;flex-shrink:0;}
 .chip-titleblock h2{font-family:'IM Fell English',serif;font-size:1.25rem;font-weight:400;color:var(--ink);}
 .chip-brand-row{display:flex;align-items:center;gap:0.5rem;margin-top:0.25rem;font-size:0.78rem;color:var(--ink3);}
+.chip-brand-link{margin-left:auto;font-size:0.72rem;color:var(--gold2);text-decoration:none;white-space:nowrap;}
+.chip-brand-link:hover{text-decoration:underline;}
+.chip-addpal-row{display:flex;gap:0.5rem;align-items:center;}
+.chip-addpal-row select{flex:1;font-family:'Crimson Pro',serif;font-size:0.82rem;padding:0.45rem 0.6rem;border:1px solid var(--border);border-radius:var(--r-sm);background:white;color:var(--ink);}
+.chip-addpal-btn{background:var(--ink);color:var(--paper);border:none;border-radius:999px;padding:0.5rem 1rem;font-size:0.78rem;cursor:pointer;white-space:nowrap;}
 .chip-pigment-code{font-family:'Courier New',monospace;font-size:0.72rem;background:var(--paper2);padding:1px 7px;border-radius:4px;letter-spacing:0.02em;}
 
 .chip-badges{display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.9rem 1.3rem 0;flex-shrink:0;}
@@ -622,8 +621,6 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
   .swatch-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0.65rem;}
   .ref-swatch{height:92px;}
   .sg-swatch{height:100px;}
-  .add-overlay button{min-height:44px;font-size:0.85rem;padding:0 1rem;}
-  .add-overlay select{font-size:0.8rem;padding:0.35rem 0.5rem;max-width:140px;}
   .palette-header{flex-wrap:wrap;gap:0.5rem;padding:0.75rem 0.9rem 0.6rem;}
   .palette-mobile-switcher{
     display:block;width:100%;order:0;
@@ -1830,6 +1827,7 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
       <div class="chip-brand-row">
         <span id="chip-brand"></span>
         <span class="chip-pigment-code" id="chip-pigment"></span>
+        <a href="#" id="chip-brand-link" class="chip-brand-link" target="_blank" rel="noopener" style="display:none;">Visit brand site ↗</a>
       </div>
     </div>
 
@@ -1862,7 +1860,15 @@ body{background:var(--paper);font-family:'Crimson Pro',Georgia,serif;color:var(-
       </div>
     </div>
 
-    <div class="chip-section">
+    <div class="chip-section" id="chip-addpal-section" style="display:none;">
+      <div class="chip-section-title">Add to a Palette</div>
+      <div class="chip-addpal-row">
+        <select id="chip-addpal-select"></select>
+        <button class="chip-addpal-btn" onclick="chipAddToPalette()">+ Add</button>
+      </div>
+    </div>
+
+    <div class="chip-section" id="chip-notes-section">
       <div class="chip-section-title">Notes</div>
       <textarea class="chip-notes-input" id="chip-notes-input" rows="2" placeholder="Add a note about this paint…"></textarea>
     </div>
@@ -2880,6 +2886,22 @@ const COLORS=[
 ];
 
 const BRAND_LABELS={'daniel-smith':'Daniel Smith','winsor-newton':'Winsor & Newton','utrecht':'Utrecht','schmincke':'Schmincke','mgraham':'M. Graham','sennelier':'Sennelier','qor':'QoR','holbein':'Holbein','blockx':'Blockx','mijello':'Mijello Mission Gold','schpirerr-farben':'Schpirerr Farben'};
+// Verified against each manufacturer's own site. Schpirerr Farben is a
+// boutique brand that appears to sell only through Amazon/Etsy with no
+// dedicated site found — omitted rather than guessed, so the chip modal
+// simply won't show a website link for it.
+const BRAND_WEBSITES={
+  'daniel-smith':'https://danielsmith.com/',
+  'winsor-newton':'https://www.winsornewton.com/',
+  'utrecht':'https://www.utrechtart.com/',
+  'schmincke':'https://www.schmincke.de/en/',
+  'mgraham':'https://mgraham.com/',
+  'sennelier':'https://www.sennelier-colors.com/',
+  'qor':'https://www.goldenartistcolors.com/products/qor-artist-watercolors',
+  'holbein':'https://www.holbein.co.jp/en.html',
+  'blockx':'https://www.blockx.be/en/',
+  'mijello':'https://en-mj.picpac.kr/'
+};
 const GROUP_ORDER=['Yellows','Oranges','Reds','Blues','Purples','Greens','Neutrals','Blacks'];
 const GROUP_LABELS={Yellows:'Yellows & Golds',Oranges:'Oranges',Reds:'Reds & Pinks',
   Blues:'Blues',Purples:'Purples & Violets',Greens:'Greens',
@@ -3813,7 +3835,7 @@ const LF_LABELS={I:'Excellent lightfastness',II:'Very good lightfastness',III:'F
 const TRANSPARENCY_LABELS={T:'Transparent',ST:'Semi-transparent',O:'Opaque'};
 const STAINING_LABELS={high:'Staining',moderate:'Semi-staining',low:'Lifts easily'};
 
-let _chipCurrentPalId=null, _chipCurrentIdx=null;
+let _chipCurrentPalId=null, _chipCurrentIdx=null, _chipOpenColor=null;
 
 function openDilutionModal(palId, idx){
   const pal=palettes.find(p=>p.id===palId);
@@ -3821,7 +3843,26 @@ function openDilutionModal(palId, idx){
   const c=pal.colors[idx];
   if(!c) return;
   _chipCurrentPalId=palId; _chipCurrentIdx=idx;
+  _chipOpenColor=null;
+  populateChipModal(c, false);
+}
 
+// Opens the same paint-detail chip used in the Palette tab, but for a raw
+// color from the reference database rather than one already living inside
+// a palette — this is what Brand Reference cards now open on tap, instead
+// of the old hover-only "+ Add to Palette" overlay (which needed a second
+// tap to actually register on touch devices anyway). Notes have nowhere to
+// persist for a color that isn't in any palette yet, so that section hides;
+// an Add to Palette control takes its place instead.
+function openRefChip(name, brand){
+  const c=COLORS.find(x=>x.name===name && x.brand===brand);
+  if(!c) return;
+  _chipCurrentPalId=null; _chipCurrentIdx=null;
+  _chipOpenColor={name:c.name, brand:c.brand};
+  populateChipModal(c, true);
+}
+
+function populateChipModal(c, isReferenceMode){
   // ── Title block ──
   document.getElementById('chip-color-name').textContent=c.name;
   document.getElementById('chip-brand').textContent = c.custom ? 'Custom mix' : (BRAND_LABELS[c.brand]||c.brand);
@@ -3833,6 +3874,16 @@ function openDilutionModal(palId, idx){
     pigEl.style.display=c.pigment?'':'none';
   }
   document.getElementById('chip-custom-badge').style.display=c.custom?'block':'none';
+
+  // ── Manufacturer website link ──
+  const brandLink=document.getElementById('chip-brand-link');
+  const websiteUrl = !c.custom && BRAND_WEBSITES[c.brand];
+  if(websiteUrl){
+    brandLink.href=websiteUrl;
+    brandLink.style.display='';
+  } else {
+    brandLink.style.display='none';
+  }
 
   // ── Badges: transparency, granulation, staining, lightfastness ──
   const staining=c.custom ? 'moderate' : estimateStaining(c.pigment);
@@ -3871,15 +3922,28 @@ function openDilutionModal(palId, idx){
   wetSample.style.background=wetHex;
   drySample.style.background=c.hex;
 
-  // ── Notes ──
-  const notesInput=document.getElementById('chip-notes-input');
-  notesInput.value=c.note||'';
-
   // ── Dilution strip (existing feature, folded into the chip) ──
   const labelsWrap=document.getElementById('dilution-labels');
   labelsWrap.innerHTML=DILUTION_STOPS.map(s=>
     `<div class="dilution-label-cell"><div class="dilution-label-name">${s.label}</div><div class="dilution-label-sub">${s.sub}</div></div>`
   ).join('');
+
+  // ── Notes vs. Add-to-Palette: mutually exclusive depending on context.
+  // A color that isn't in any palette yet has nowhere for a note to live,
+  // so that section is replaced by the ability to add it to one instead.
+  const notesSection=document.getElementById('chip-notes-section');
+  const addpalSection=document.getElementById('chip-addpal-section');
+  if(isReferenceMode){
+    notesSection.style.display='none';
+    addpalSection.style.display='';
+    const sel=document.getElementById('chip-addpal-select');
+    sel.innerHTML=paletteOptionsHtml();
+  } else {
+    notesSection.style.display='';
+    addpalSection.style.display='none';
+    const notesInput=document.getElementById('chip-notes-input');
+    notesInput.value=c.note||'';
+  }
 
   const modal=document.getElementById('modal-dilution');
   modal.classList.add('open');
@@ -3891,6 +3955,14 @@ function openDilutionModal(palId, idx){
     renderDilutionStrip(cv, c.hex, c.gran, c.transparency||'ST', W, H);
   });
 }
+
+function chipAddToPalette(){
+  const sel=document.getElementById('chip-addpal-select');
+  if(!sel || !_chipOpenColor) return;
+  addColorToPalette(sel.value, _chipOpenColor.name, _chipOpenColor.brand);
+  closeDilutionModal();
+}
+
 function closeDilutionModal(){
   // Persist any note change on close, same as the note field elsewhere in the app
   if(_chipCurrentPalId!==null && _chipCurrentIdx!==null){
@@ -3907,6 +3979,7 @@ function closeDilutionModal(){
   }
   document.getElementById('modal-dilution').classList.remove('open');
   _chipCurrentPalId=null; _chipCurrentIdx=null;
+  _chipOpenColor=null;
 }
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
@@ -4046,7 +4119,7 @@ function renderRef(){
       const cid=c._cid;
       const sn=c.name.replace(/'/g,"\\'"),sb=c.brand.replace(/'/g,"\\'");
       const bTag=refBrand==='all'?`<div class="ref-brand-tag">${BRAND_LABELS[c.brand]||c.brand}</div>`:'';
-      html+=`<div class="ref-card">
+      html+=`<div class="ref-card" onclick="openRefChip('${sn}','${sb}')">
         <div class="ref-swatch" style="background:${c.hex};" data-cid="rs_${cid}">
           <canvas id="rs_${cid}"></canvas>
         </div>
@@ -4060,10 +4133,6 @@ function renderRef(){
           <div class="ref-meta"><span class="lbadge lf-${c.lf}">${c.lf}</span>
           <span class="ref-transp">${c.gran?'Gran·':''} ${c.transparency}</span></div>
           ${bTag}
-        </div>
-        <div class="add-overlay">
-          <select id="sel_${cid}" onclick="this.innerHTML=paletteOptionsHtml()">${paletteOptionsHtml()}</select>
-          <button onclick="addColorToPalette(document.getElementById('sel_${cid}').value,'${sn}','${sb}')">+ Add to Palette</button>
         </div>
       </div>`;
     });
