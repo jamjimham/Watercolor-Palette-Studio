@@ -1,14 +1,17 @@
 // Palette Studio — Service Worker
-// Provides offline support for a single-file PWA: on install, the app shell
-// (index.html, manifest, icons) is cached. On every fetch, we try the cache
-// first for same-origin navigations/assets so the app opens instantly even
-// with no connection, then fall back to network for anything not cached,
-// and fall back to the cached shell if a navigation request fails entirely
-// (e.g. opening the app while genuinely offline).
+// Provides offline support for a single-file PWA.
 //
-// Cache version is bumped manually whenever the app's core files change, so
-// old caches get cleaned up and users pick up new versions on next load.
-const CACHE_VERSION = 'palette-studio-v1';
+// Strategy: network-first for the app shell (index.html / navigations),
+// cache-first for other static assets (icons, manifest).
+//
+// This app changes frequently between deploys. An earlier version of this
+// file used cache-first for everything, which meant that once a device had
+// the app cached, it kept being served a stale index.html indefinitely —
+// CACHE_VERSION has to be bumped on every deploy for cache-first to notice
+// a change, and across many real releases it wasn't. Network-first for the
+// shell fixes that at the root: online users always get the current
+// version; offline users still fall back to whatever was last cached.
+const CACHE_VERSION = 'palette-studio-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -50,20 +53,36 @@ self.addEventListener('fetch', function(event){
   var url = new URL(req.url);
   if(url.origin !== self.location.origin) return;
 
-  event.respondWith(
-    caches.match(req).then(function(cached){
-      if(cached) return cached;
-      return fetch(req).then(function(networkResp){
-        // Opportunistically cache anything new we fetch from our own origin
-        // so it's available offline next time too.
+  var isAppShellDoc = req.mode === 'navigate' || url.pathname.endsWith('/index.html') || url.pathname.endsWith('/');
+
+  if(isAppShellDoc){
+    // Network-first: always try to get the latest HTML when online.
+    event.respondWith(
+      fetch(req).then(function(networkResp){
         var copy = networkResp.clone();
         caches.open(CACHE_VERSION).then(function(cache){ cache.put(req, copy); });
         return networkResp;
       }).catch(function(){
-        // Offline and not cached — for a page navigation, fall back to the
-        // cached app shell rather than showing the browser's default
-        // offline error page.
-        if(req.mode === 'navigate') return caches.match('./index.html');
+        // Offline — fall back to whatever was last cached for this exact
+        // request, or the app shell's index.html as a last resort.
+        return caches.match(req).then(function(cached){
+          return cached || caches.match('./index.html');
+        });
+      })
+    );
+    return;
+  }
+
+  // Everything else (icons, manifest, and other static assets) — cache-first
+  // is fine here since these rarely change and it saves bandwidth.
+  event.respondWith(
+    caches.match(req).then(function(cached){
+      if(cached) return cached;
+      return fetch(req).then(function(networkResp){
+        var copy = networkResp.clone();
+        caches.open(CACHE_VERSION).then(function(cache){ cache.put(req, copy); });
+        return networkResp;
+      }).catch(function(){
         return new Response('', {status:503, statusText:'Offline'});
       });
     })
