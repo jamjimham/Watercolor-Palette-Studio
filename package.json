@@ -1,0 +1,24 @@
+{
+  "name": "palette-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Watercolor palette manager — source lives in src/, deployable app is built to dist/.",
+  "scripts": {
+    "build": "node build.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint src/js/**/*.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "dev": "node build.js && echo 'Built dist/index.html — open it directly in a browser, or serve dist/ with any static file server to test the service worker.'"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "eslint": "^9.13.0",
+    "vitest": "^2.1.0",
+    "jsdom": "^25.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
