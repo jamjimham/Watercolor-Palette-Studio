@@ -52,20 +52,28 @@ function openMobileDrawer() {
   drawerOpen = true;
   var drawer = document.getElementById('mobile-nav-drawer');
   var overlay = document.getElementById('mobile-drawer-overlay');
-  var menuIcon = document.getElementById('mobile-bar-menu-icon');
+  var moreBtn = document.getElementById('mobile-bar-menu');
   if (drawer) drawer.classList.add('open');
   if (overlay) overlay.classList.add('open');
-  if (menuIcon) menuIcon.textContent = '✕';
+  if (moreBtn) moreBtn.classList.add('drawer-open');
 }
 
 function closeMobileDrawer() {
   drawerOpen = false;
   var drawer = document.getElementById('mobile-nav-drawer');
   var overlay = document.getElementById('mobile-drawer-overlay');
-  var menuIcon = document.getElementById('mobile-bar-menu-icon');
+  var moreBtn = document.getElementById('mobile-bar-menu');
   if (drawer) drawer.classList.remove('open');
   if (overlay) overlay.classList.remove('open');
-  if (menuIcon) menuIcon.textContent = '≡';
+  if (moreBtn) moreBtn.classList.remove('drawer-open');
+}
+
+// Navigate from a fixed bottom tab. Reuses showPage (which now also syncs the
+// tab bar's active state) and closes the overflow drawer if it was open.
+function tabGo(id) {
+  closeMobileDrawer();
+  showPage(id, null);
+  if (typeof syncNavTabActive === 'function') syncNavTabActive(id);
 }
 
 
@@ -91,16 +99,25 @@ function closeSidebars() {
   if (overlay) overlay.classList.remove('open');
 }
 
-// Patch showPage to sync mobile bar
+// Patch showPage to sync both the overflow drawer and the fixed tab bar.
+var PRIMARY_TABS = ['palettes','reference','valuestudy','recipes'];
 var _origShowPage = window.showPage;
 window.showPage = function(id, btn) {
   if (typeof _origShowPage === 'function') _origShowPage(id, btn);
-  if (isMobile()) {
-    updateMobileBar(id);
-    document.querySelectorAll('.mobile-nav-item').forEach(function(t){
+  updateMobileBar(id);
+  document.querySelectorAll('.mobile-nav-item').forEach(function(t){
+    t.classList.toggle('active', t.dataset.page === id);
+  });
+  // Fixed 5-tab bar: highlight the matching primary tab, or fall back to the
+  // "More" tab for any page that lives in the overflow drawer.
+  var inPrimary = PRIMARY_TABS.indexOf(id) !== -1;
+  document.querySelectorAll('.tabbar-tab').forEach(function(t){
+    if (t.classList.contains('tabbar-more')) {
+      t.classList.toggle('active', !inPrimary);
+    } else {
       t.classList.toggle('active', t.dataset.page === id);
-    });
-  }
+    }
+  });
 };
 
 window.addEventListener('resize', function(){

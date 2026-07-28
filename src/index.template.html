@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Palette Studio">
-<meta name="theme-color" content="#1e1710">
+<meta name="theme-color" content="#f4eee3">
 <meta name="description" content="Watercolor palette manager — brands, pigments, mixing, and more.">
 <title>Palette Studio — Watercolor Reference</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
-<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 {{CSS}}
 </style>
@@ -25,21 +27,21 @@
 <!-- Install Banner -->
 <div id="install-banner" style="
   display:none;position:fixed;top:0;left:0;right:0;z-index:9999;
-  background:linear-gradient(135deg,#1e1710,#2c2418);
-  color:#faf6ef;padding:12px 16px;
-  box-shadow:0 2px 12px rgba(0,0,0,0.3);
-  border-bottom:2px solid #b8862a;
+  background:#fcfaf5;
+  color:#33302a;padding:12px 16px;
+  box-shadow:0 4px 18px rgba(51,48,42,0.12);
+  border-bottom:1px solid rgba(51,48,42,0.1);
   font-family:'Crimson Pro',Georgia,serif;
 ">
   <div style="display:flex;align-items:center;gap:10px;max-width:500px;margin:0 auto;">
     <div style="font-size:1.5rem;flex-shrink:0;">🎨</div>
     <div style="flex:1;">
-      <div style="font-size:0.9rem;font-weight:600;color:#b8862a;">Add to Home Screen</div>
+      <div style="font-size:0.95rem;font-weight:600;font-family:'Fraunces',serif;color:#c6794f;">Add to Home Screen</div>
       <div style="font-size:0.75rem;opacity:0.7;margin-top:2px;">Tap <strong>Share ↑</strong> then <strong>"Add to Home Screen"</strong> for app-like access</div>
     </div>
     <button onclick="dismissBanner()" style="
-      background:none;border:1px solid rgba(255,255,255,0.2);color:#faf6ef;
-      padding:6px 12px;border-radius:4px;font-size:0.78rem;cursor:pointer;
+      background:none;border:1px solid rgba(51,48,42,0.2);color:#5c5347;
+      padding:6px 12px;border-radius:7px;font-size:0.78rem;cursor:pointer;
       font-family:'Crimson Pro',serif;white-space:nowrap;flex-shrink:0;
     ">Got it</button>
   </div>
@@ -110,7 +112,7 @@
     <div class="recommended-wrap" style="flex:1;overflow-y:auto;overflow-x:hidden;padding:1.5rem;-webkit-overflow-scrolling:touch;">
       <div style="max-width:900px;margin:0 auto;">
         <div style="margin-bottom:1.5rem;">
-          <h2 style="font-family:'IM Fell English',serif;font-size:1.2rem;font-weight:400;margin-bottom:0.4rem;">Starter Palette Suggestions</h2>
+          <h2 style="font-family:'Fraunces',serif;font-size:1.2rem;font-weight:400;margin-bottom:0.4rem;">Starter Palette Suggestions</h2>
           <p style="font-size:0.8rem;color:var(--ink3);font-style:italic;">Click any palette to load it into My Palettes. Colors are shown from Daniel Smith unless otherwise noted.</p>
         </div>
         <div class="rec-grid" id="rec-grid"></div>
@@ -549,15 +551,27 @@
       <button class="mobile-nav-item" data-page="backup" onclick="mobileNavDrawer('backup',this)"><span class="mni">🛟</span><span class="mnl">Backup</span></button>
     </div>
   </div>
-  <!-- Fixed bottom bar: current page + menu toggle -->
+  <!-- Fixed bottom bar: five primary tabs (concept layout) -->
   <div class="mobile-bar">
-    <div class="mobile-bar-current" id="mobile-bar-current">
-      <span class="mbc-icon" id="mbc-icon">🎨</span>
-      <span class="mbc-label" id="mbc-label">Palettes</span>
-    </div>
-    <button class="mobile-bar-menu" id="mobile-bar-menu" onclick="toggleMobileDrawer()">
-      <span id="mobile-bar-menu-icon">≡</span>
-      <span class="mobile-bar-menu-label">Menu</span>
+    <button class="tabbar-tab active" data-page="palettes" onclick="tabGo('palettes')">
+      <svg class="tbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></svg>
+      <span class="tbl">Palettes</span>
+    </button>
+    <button class="tabbar-tab" data-page="reference" onclick="tabGo('reference')">
+      <svg class="tbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>
+      <span class="tbl">Reference</span>
+    </button>
+    <button class="tabbar-tab" data-page="valuestudy" onclick="tabGo('valuestudy')">
+      <svg class="tbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>
+      <span class="tbl">Values</span>
+    </button>
+    <button class="tabbar-tab" data-page="recipes" onclick="tabGo('recipes')">
+      <svg class="tbi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5C12 3.5 5.5 10 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10 12 3.5 12 3.5z"/><path d="M9 14.5a3 3 0 0 0 3 3" opacity="0.5"/></svg>
+      <span class="tbl">Mixes</span>
+    </button>
+    <button class="tabbar-tab tabbar-more" id="mobile-bar-menu" onclick="toggleMobileDrawer()">
+      <svg class="tbi" id="mobile-bar-menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+      <span class="tbl">More</span>
     </button>
   </div>
 </nav>

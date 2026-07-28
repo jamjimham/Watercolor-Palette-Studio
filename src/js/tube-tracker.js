@@ -87,8 +87,8 @@ function renderTracker(){
   var empties=sorted.filter(function(c){return getTubeLevel(c)===0;});
   var lows=sorted.filter(function(c){return getTubeLevel(c)===1;});
   if(empties.length||lows.length){
-    html+='<div style="margin-top:1rem;padding:0.8rem 1rem;background:white;border:1px solid var(--border);border-radius:4px;border-left:3px solid #c04030;">'
-      +'<div style="font-family:\'IM Fell English\',serif;font-size:0.85rem;margin-bottom:0.4rem;color:#c04030;">Shopping List</div>'
+    html+='<div style="margin-top:1rem;padding:0.8rem 1rem;background:white;border:1px solid var(--border);border-radius:4px;border-left:3px solid var(--rust);">'
+      +'<div style="font-family:\'Fraunces\',serif;font-size:0.85rem;margin-bottom:0.4rem;color:var(--rust);">Shopping List</div>'
       +(empties.length?'<div style="font-size:0.75rem;color:var(--ink2);margin-bottom:0.3rem;"><strong>Empty:</strong> '+empties.map(function(c){return c.name+' ('+( BRAND_LABELS[c.brand]||c.brand)+')';}).join(', ')+'</div>':'')
       +(lows.length?'<div style="font-size:0.75rem;color:var(--ink2);"><strong>Running low:</strong> '+lows.map(function(c){return c.name+' ('+(BRAND_LABELS[c.brand]||c.brand)+')';}).join(', ')+'</div>':'')
       +'</div>';
