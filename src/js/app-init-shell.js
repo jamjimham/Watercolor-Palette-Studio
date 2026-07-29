@@ -100,7 +100,7 @@ function closeSidebars() {
 }
 
 // Patch showPage to sync both the overflow drawer and the fixed tab bar.
-var PRIMARY_TABS = ['palettes','reference','valuestudy','recipes'];
+var PRIMARY_TABS = ['palettes','reference','valuestudy','shopping'];
 var _origShowPage = window.showPage;
 window.showPage = function(id, btn) {
   if (typeof _origShowPage === 'function') _origShowPage(id, btn);

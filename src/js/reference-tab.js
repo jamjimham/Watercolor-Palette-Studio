@@ -100,9 +100,15 @@ function renderRef(){
       const cid=c._cid;
       const sn=c.name.replace(/'/g,"\\'"),sb=c.brand.replace(/'/g,"\\'");
       const bTag=refBrand==='all'?`<div class="ref-brand-tag">${BRAND_LABELS[c.brand]||c.brand}</div>`:'';
+      const photo=getColorPhoto(c);
+      const hasPhoto=!!photo;
+      const showPhoto=hasPhoto&&isColorPhotoVisible(c);
       html+=`<div class="ref-card" onclick="openRefChip('${sn}','${sb}')">
         <div class="ref-swatch" style="background:${c.hex};" data-cid="rs_${cid}">
-          <canvas id="rs_${cid}"></canvas>
+          <canvas id="rs_${cid}" style="${showPhoto?'opacity:0;':''}"></canvas>
+          <div class="ref-photo${showPhoto?' visible':''}" id="rp_${cid}" style="${photo?'background-image:url('+photo+');':''}"></div>
+          <button class="ref-cam" id="rpc_${cid}" title="${hasPhoto?'Replace or remove photo':'Attach a real-world swatch photo'}" onclick="event.stopPropagation();refCamAction('${cid}','${sn}','${sb}',${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
+          <button class="ref-photo-toggle${hasPhoto?' has-photo':''}" id="rpt_${cid}" onclick="event.stopPropagation();refTogglePhoto('${cid}','${sn}','${sb}')" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>
         </div>
         <div class="ref-ts" data-cid="rt_${cid}">
           <canvas id="rt_${cid}"></canvas>
@@ -148,6 +154,50 @@ function renderRef(){
   ids.forEach(b=>{
     const el=document.getElementById('rcnt-'+b);if(!el) return;
     el.textContent='('+(brandCounts[b]||0)+')';
+  });
+}
+
+// ── Reference card photo wiring — shares the same color-identity photo
+// store as palette swatch cards, so a photo attached here shows up on
+// every palette card for that color too, and vice versa. ──
+function refCamAction(cid, name, brand, hasPhoto){
+  const c=COLORS.find(x=>x.name===name && x.brand===brand);
+  if(!c) return;
+  const key=colorPhotoKey(c);
+  const btn=(event&&(event.currentTarget||event.target))||document.getElementById('rpc_'+cid);
+  const refresh=function(){
+    const photo=getColorPhoto(c);
+    const visible=isColorPhotoVisible(c);
+    const photoDiv=document.getElementById('rp_'+cid);
+    const canvasEl=document.getElementById('rs_'+cid);
+    const toggleBtn=document.getElementById('rpt_'+cid);
+    const camBtn=document.getElementById('rpc_'+cid);
+    if(photoDiv){
+      photoDiv.style.backgroundImage=photo?'url('+photo+')':'';
+      photoDiv.classList.toggle('visible', !!photo&&visible);
+    }
+    if(canvasEl) canvasEl.style.opacity=(photo&&visible)?'0':'';
+    if(toggleBtn){
+      toggleBtn.classList.toggle('has-photo', !!photo);
+      toggleBtn.textContent=visible?'◼ render':'🖼 photo';
+    }
+    if(camBtn) camBtn.textContent=photo?'📷✓':'📷';
+  };
+  if(!hasPhoto){ triggerPhotoUpload(key, refresh); return; }
+  if(btn) showPhotoActionMenu(btn, key, refresh, refresh);
+}
+
+function refTogglePhoto(cid, name, brand){
+  const c=COLORS.find(x=>x.name===name && x.brand===brand);
+  if(!c) return;
+  const key=colorPhotoKey(c);
+  toggleColorPhotoVisible(key, function(visible){
+    const photoDiv=document.getElementById('rp_'+cid);
+    const canvasEl=document.getElementById('rs_'+cid);
+    const toggleBtn=document.getElementById('rpt_'+cid);
+    if(photoDiv) photoDiv.classList.toggle('visible', visible);
+    if(canvasEl) canvasEl.style.opacity=visible?'0':'';
+    if(toggleBtn) toggleBtn.textContent=visible?'◼ render':'🖼 photo';
   });
 }
 

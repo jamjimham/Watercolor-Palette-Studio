@@ -214,100 +214,130 @@ function saveColorNote(palId, idx, note){
 // ══════════════════════════════════════════════════════════════
 // SWATCH PHOTO ATTACHMENT
 // ══════════════════════════════════════════════════════════════
-function triggerPhotoUpload(palId, idx){
-  // Reuse or create a hidden file input
-  var inputId='_photoinput_'+palId+'_'+idx;
+// Photos are stored once per color identity (see colorPhotoKey in
+// state-core.js) so attaching a real-world swatch photo anywhere — a
+// palette card or a Brand Reference card — makes it show up everywhere
+// else that color appears too.
+function triggerPhotoUpload(colorKey, onSaved){
+  if(!colorKey) return;
+  var inputId='_photoinput_'+colorKey.replace(/[^a-zA-Z0-9]/g,'_');
   var inp=document.getElementById(inputId);
   if(!inp){
     inp=document.createElement('input');
     inp.type='file'; inp.accept='image/*'; inp.capture='environment';
     inp.id=inputId; inp.className='sg-file-input';
     document.body.appendChild(inp);
-    inp.addEventListener('change',function(){
-      var file=inp.files[0]; if(!file) return;
-      // Resize to max 400px wide before storing as base64 to keep localStorage lean
-      var reader=new FileReader();
-      reader.onload=function(ev){
-        var img=new Image();
-        img.onload=function(){
-          var MAX=400;
-          var scale=Math.min(1,MAX/Math.max(img.width,img.height));
-          var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
-          var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
-          cv.getContext('2d').drawImage(img,0,0,w,h);
-          var dataUrl=cv.toDataURL('image/jpeg',0.82);
-          var pal=palettes.find(function(p){return p.id===palId;});
-          if(!pal||!pal.colors[idx]) return;
-          pal.colors[idx].photo=dataUrl;
-          pal.colors[idx].photoVisible=true;
-          savePalettes(palettes);
-          // Update DOM without full re-render
-          var photoDiv=document.getElementById('sgp_'+palId+'_'+idx);
-          var canvasEl=document.getElementById('sgc_'+palId+'_'+idx);
-          var toggleBtn=document.getElementById('sgt_'+palId+'_'+idx);
-          if(photoDiv){photoDiv.style.backgroundImage='url('+dataUrl+')';photoDiv.classList.add('visible');}
-          if(canvasEl){canvasEl.style.opacity='0';}
-          if(toggleBtn){toggleBtn.classList.add('has-photo');toggleBtn.textContent='◼ render';}
-          showToast('Photo attached');
-        };
-        img.src=ev.target.result;
-      };
-      reader.readAsDataURL(file);
-      inp.value=''; // reset so same file can be re-selected
-    });
   }
+  inp.onchange=function(){
+    var file=inp.files[0]; if(!file) return;
+    // Resize to max 400px wide before storing as base64 to keep localStorage lean
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var MAX=400;
+        var scale=Math.min(1,MAX/Math.max(img.width,img.height));
+        var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+        var cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+        cv.getContext('2d').drawImage(img,0,0,w,h);
+        var dataUrl=cv.toDataURL('image/jpeg',0.82);
+        colorPhotos[colorKey]={photo:dataUrl, visible:true};
+        saveColorPhotos(colorPhotos);
+        showToast('Photo attached');
+        if(onSaved) onSaved(dataUrl);
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    inp.value=''; // reset so same file can be re-selected
+  };
   inp.click();
 }
 
-function swatchCamAction(palId, idx, hasPhoto){
-  if(!hasPhoto){ triggerPhotoUpload(palId,idx); return; }
-  // Show a tiny action sheet-style popup
+function removeColorPhotoByKey(colorKey, onRemoved){
+  if(!colorKey) return;
+  delete colorPhotos[colorKey];
+  saveColorPhotos(colorPhotos);
+  showToast('Photo removed');
+  if(onRemoved) onRemoved();
+}
+
+function toggleColorPhotoVisible(colorKey, onToggled){
+  var e=colorKey?colorPhotos[colorKey]:null;
+  if(!e) return;
+  e.visible = e.visible===false ? true : false;
+  saveColorPhotos(colorPhotos);
+  if(onToggled) onToggled(e.visible);
+}
+
+// Small action-sheet popup used by both palette swatch cards and reference
+// cards to replace/remove a color's shared photo.
+function showPhotoActionMenu(anchorEl, colorKey, onReplace, onRemove){
   var existing=document.getElementById('_cam_menu');
   if(existing) existing.remove();
   var menu=document.createElement('div');
   menu.id='_cam_menu';
-  menu.style.cssText='position:fixed;z-index:9999;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(30,23,16,0.18);padding:0.3rem 0;min-width:160px;font-family:Crimson Pro,serif;font-size:0.88rem;';
+  menu.style.cssText='position:fixed;z-index:9999;background:white;border:1px solid var(--border);border-radius:6px;box-shadow:0 4px 16px rgba(30,23,16,0.18);padding:0.3rem 0;min-width:180px;font-family:Crimson Pro,serif;font-size:0.88rem;';
   menu.innerHTML=[
     '<div style="padding:0.45rem 1rem;cursor:pointer;color:var(--ink);" id="_cmr">🔄 Replace photo</div>',
+    '<div style="padding:0.3rem 1rem 0.4rem;color:var(--ink3);font-size:0.68rem;font-style:italic;">Shows for this color everywhere</div>',
     '<div style="padding:0.45rem 1rem;cursor:pointer;color:var(--rust);" id="_cmd">🗑 Remove photo</div>',
     '<div style="padding:0.45rem 1rem;cursor:pointer;color:var(--ink3);" id="_cmc">Cancel</div>'
   ].join('');
   document.body.appendChild(menu);
-  // Position near the camera button
-  var btn=event.currentTarget||event.target;
-  var r=btn.getBoundingClientRect();
-  menu.style.left=Math.min(r.left, window.innerWidth-170)+'px';
+  var r=anchorEl.getBoundingClientRect();
+  menu.style.left=Math.min(r.left, window.innerWidth-190)+'px';
   menu.style.top=(r.bottom+4)+'px';
   var dismiss=function(){menu.remove();document.removeEventListener('click',outsideClick,true);};
   var outsideClick=function(e){if(!menu.contains(e.target))dismiss();};
   setTimeout(function(){document.addEventListener('click',outsideClick,true);},10);
-  document.getElementById('_cmr').onclick=function(){dismiss();triggerPhotoUpload(palId,idx);};
-  document.getElementById('_cmd').onclick=function(){dismiss();removeSwatchPhoto(palId,idx);};
+  document.getElementById('_cmr').onclick=function(){dismiss();triggerPhotoUpload(colorKey,onReplace);};
+  document.getElementById('_cmd').onclick=function(){dismiss();removeColorPhotoByKey(colorKey,onRemove);};
   document.getElementById('_cmc').onclick=dismiss;
+}
+
+// ── Palette swatch card wiring ──
+function swatchCamAction(palId, idx, hasPhoto){
+  var pal=palettes.find(function(p){return p.id===palId;});
+  if(!pal||!pal.colors[idx]) return;
+  var c=pal.colors[idx];
+  var key=colorPhotoKey(c);
+  var btn=(event&&(event.currentTarget||event.target))||document.getElementById('sgcam_'+palId+'_'+idx);
+  var refresh=function(){
+    var photo=getColorPhoto(c);
+    var visible=isColorPhotoVisible(c);
+    var photoDiv=document.getElementById('sgp_'+palId+'_'+idx);
+    var canvasEl=document.getElementById('sgc_'+palId+'_'+idx);
+    var toggleBtn=document.getElementById('sgt_'+palId+'_'+idx);
+    var camBtn=document.getElementById('sgcam_'+palId+'_'+idx);
+    if(photoDiv){
+      photoDiv.style.backgroundImage=photo?'url('+photo+')':'';
+      photoDiv.classList.toggle('visible', !!photo&&visible);
+    }
+    if(canvasEl) canvasEl.style.opacity=(photo&&visible)?'0':'';
+    if(toggleBtn){
+      toggleBtn.classList.toggle('has-photo', !!photo);
+      toggleBtn.textContent=visible?'◼ render':'🖼 photo';
+    }
+    if(camBtn) camBtn.textContent=photo?'📷✓':'📷';
+  };
+  if(!hasPhoto){ triggerPhotoUpload(key, refresh); return; }
+  if(btn) showPhotoActionMenu(btn, key, refresh, refresh);
 }
 
 function toggleSwatchPhoto(palId, idx){
   var pal=palettes.find(function(p){return p.id===palId;});
-  if(!pal||!pal.colors[idx]||!pal.colors[idx].photo) return;
-  var c=pal.colors[idx];
-  c.photoVisible=!c.photoVisible;
-  savePalettes(palettes);
-  var photoDiv=document.getElementById('sgp_'+palId+'_'+idx);
-  var canvasEl=document.getElementById('sgc_'+palId+'_'+idx);
-  var toggleBtn=document.getElementById('sgt_'+palId+'_'+idx);
-  if(photoDiv) photoDiv.classList.toggle('visible',c.photoVisible);
-  if(canvasEl) canvasEl.style.opacity=c.photoVisible?'0':'';
-  if(toggleBtn) toggleBtn.textContent=c.photoVisible?'◼ render':'🖼 photo';
-}
-
-function removeSwatchPhoto(palId, idx){
-  var pal=palettes.find(function(p){return p.id===palId;});
   if(!pal||!pal.colors[idx]) return;
-  delete pal.colors[idx].photo;
-  delete pal.colors[idx].photoVisible;
-  savePalettes(palettes);
-  renderSwatchView(pal, document.getElementById('palette-view-content'));
-  showToast('Photo removed');
+  var c=pal.colors[idx];
+  var key=colorPhotoKey(c);
+  toggleColorPhotoVisible(key, function(visible){
+    var photoDiv=document.getElementById('sgp_'+palId+'_'+idx);
+    var canvasEl=document.getElementById('sgc_'+palId+'_'+idx);
+    var toggleBtn=document.getElementById('sgt_'+palId+'_'+idx);
+    if(photoDiv) photoDiv.classList.toggle('visible', visible);
+    if(canvasEl) canvasEl.style.opacity=visible?'0':'';
+    if(toggleBtn) toggleBtn.textContent=visible?'◼ render':'🖼 photo';
+  });
 }
 
 var debouncedRenderRef     = debounce(renderRef, 200);

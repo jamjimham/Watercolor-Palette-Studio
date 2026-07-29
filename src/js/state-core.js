@@ -20,6 +20,61 @@ let palettes=loadPalettes();
 let activePaletteId=palettes.length?palettes[0].id:null;
 let activePaletteView='swatch'; // swatch | wheel | mixing
 
+// ══════════════════════════════════════════════════════════════
+// COLOR PHOTOS (real-world swatch photos, shared across the whole app)
+// ══════════════════════════════════════════════════════════════
+// Keyed by color identity (brand+name, or name+hex for custom mixes) rather
+// than by palette/index, so a photo attached once — from any palette card or
+// the Brand Reference grid — shows up everywhere that color appears, while
+// still letting each card individually toggle between the rendered swatch
+// and the real photo.
+function loadColorPhotos(){
+  try{return JSON.parse(localStorage.getItem('wc_color_photos')||'{}');}catch{return{};}
+}
+function saveColorPhotos(p){
+  localStorage.setItem('wc_color_photos',JSON.stringify(p));
+}
+let colorPhotos=loadColorPhotos();
+
+function colorPhotoKey(c){
+  if(!c) return '';
+  if(c.custom) return 'custom::'+(c.name||'')+'::'+(c.hex||'');
+  return (c.brand||'')+'::'+(c.name||'');
+}
+function getColorPhotoEntry(c){
+  const k=colorPhotoKey(c);
+  return k?colorPhotos[k]:null;
+}
+function getColorPhoto(c){
+  const e=getColorPhotoEntry(c);
+  return e?e.photo:null;
+}
+function isColorPhotoVisible(c){
+  const e=getColorPhotoEntry(c);
+  return e ? e.visible!==false : false;
+}
+
+// One-time migration: earlier versions stored photos per palette-swatch
+// instance (pal.colors[idx].photo). Fold any of those into the shared store
+// so existing photos keep showing up instead of silently vanishing.
+(function migrateSwatchPhotosToGlobal(){
+  try{
+    let changed=false;
+    palettes.forEach(p=>{
+      (p.colors||[]).forEach(c=>{
+        if(c.photo){
+          const k=colorPhotoKey(c);
+          if(k && !colorPhotos[k]){
+            colorPhotos[k]={photo:c.photo, visible:c.photoVisible!==false};
+            changed=true;
+          }
+        }
+      });
+    });
+    if(changed) saveColorPhotos(colorPhotos);
+  }catch(e){}
+})();
+
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
 // ══════════════════════════════════════════════════════════════

@@ -50,6 +50,7 @@ function renderPaletteArea(){
     area.innerHTML=`<div class="no-palette" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;">
       <div class="big-icon">🎨</div>
       <p>Select or create a palette<br>to get started.</p>
+      <button class="btn-new" style="padding:0.6rem 1.1rem;font-size:0.85rem;" onclick="openNewPaletteModal()">+ New Palette</button>
     </div>`;
     return;
   }
@@ -60,6 +61,11 @@ function renderPaletteArea(){
         ${palettes.map(p=>`<option value="${p.id}"${p.id===pal.id?' selected':''}>${p.name} (${p.colors.length})</option>`).join('')}
       </select>
       <input class="palette-name-input" value="${pal.name}" onchange="renamePalette('${pal.id}',this.value)" maxlength="40">
+      <div class="palette-toolbar">
+        <button class="palette-tool-btn" title="New palette" onclick="openNewPaletteModal()">+ New</button>
+        <button class="palette-tool-btn" title="Duplicate this palette" onclick="duplicatePalette(event,'${pal.id}')">⧉ Copy</button>
+        <button class="palette-tool-btn del" title="Delete this palette" onclick="deletePalette(event,'${pal.id}')">✕ Delete</button>
+      </div>
       <button class="btn-add-colors" onclick="showPage('reference',document.querySelector('.nav-tab:nth-child(2)'))">+ Add Colors</button>
     </div>
     <div class="palette-header-row2">
@@ -136,13 +142,19 @@ function toggleMixSelect(palId,idx){
 
 function renderSwatchView(pal,content){
   clearQ();
-  // Sort bar HTML
+  // Sort bar HTML — sort modes live in one dropdown; Mix Colors stays its
+  // own dedicated button since it's an action, not a sort order.
+  const SORT_OPTIONS=[
+    {v:'custom',   label:'✦ Custom Order'},
+    {v:'hue',      label:'🌈 By Hue'},
+    {v:'lf',       label:'⭐ By Lightfastness'},
+    {v:'brand',    label:'🏷 By Brand'},
+    {v:'transparency', label:'◐ By Opacity'},
+  ];
   const sortBar=`<div class="palette-sort-bar">
-    <button class="sort-btn${palSortMode==='custom'?' active':''}" onclick="setPalSort('custom','${pal.id}')">✦ Custom</button>
-    <button class="sort-btn${palSortMode==='hue'?' active':''}" onclick="setPalSort('hue','${pal.id}')">🌈 <span class="sb-by">By </span>Hue</button>
-    <button class="sort-btn${palSortMode==='lf'?' active':''}" onclick="setPalSort('lf','${pal.id}')">⭐ <span class="sb-by">By </span><span class="sb-long">Lightfastness</span><span class="sb-short">LF</span></button>
-    <button class="sort-btn${palSortMode==='brand'?' active':''}" onclick="setPalSort('brand','${pal.id}')">🏷 <span class="sb-by">By </span>Brand</button>
-    <button class="sort-btn${palSortMode==='transparency'?' active':''}" onclick="setPalSort('transparency','${pal.id}')">◐ <span class="sb-by">By </span>Opacity</button>
+    <select class="sort-dropdown" onchange="setPalSort(this.value,'${pal.id}')" aria-label="Sort colors">
+      ${SORT_OPTIONS.map(o=>`<option value="${o.v}"${palSortMode===o.v?' selected':''}>${o.label}</option>`).join('')}
+    </select>
     <button class="sort-btn mix-toggle-btn${mixModeActive?' active':''}" onclick="toggleMixMode('${pal.id}')">🧪 ${mixModeActive?'Cancel Mixing':'Mix Colors'}</button>
     <span class="sort-label">${pal.colors.length} colors${palSortMode==='custom'&&!mixModeActive?' · drag ⠿ to reorder':''}${mixModeActive?' · tap swatches to select':''}${!mixModeActive?' · tap a swatch for dilution guide':''}</span>
   </div>`;
@@ -154,8 +166,9 @@ function renderSwatchView(pal,content){
   function cardHtml(c){
     const realIdx=pal.colors.findIndex(x=>x===c);
     const note=c.note||'';
-    const hasPhoto=!!c.photo;
-    const showPhoto=hasPhoto&&(c.photoVisible!==false);
+    const photo=getColorPhoto(c);
+    const hasPhoto=!!photo;
+    const showPhoto=hasPhoto&&isColorPhotoVisible(c);
     const isSelected=mixModeActive&&mixSelectedIdxs.includes(realIdx);
     const selectOverlay=mixModeActive?`<button class="sg-mix-select${isSelected?' checked':''}" onclick="toggleMixSelect('${pal.id}',${realIdx})" title="Select for mixing">${isSelected?'✓':''}</button>`:'';
     const clickToSelect=mixModeActive?` onclick="toggleMixSelect('${pal.id}',${realIdx})"`:'';
@@ -164,9 +177,9 @@ function renderSwatchView(pal,content){
         ${selectOverlay}
         <div class="sg-swatch"${mixModeActive?'':` onclick="openDilutionModal('${pal.id}',${realIdx})" title="Tap for full paint details"`} style="background:${c.hex};">
           <canvas id="sgc_${pal.id}_${realIdx}" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;${showPhoto?'opacity:0;':''}"></canvas>
-          <div class="sg-photo${showPhoto?' visible':''}" id="sgp_${pal.id}_${realIdx}" style="${c.photo?'background-image:url('+c.photo+');':''}"></div>
+          <div class="sg-photo${showPhoto?' visible':''}" id="sgp_${pal.id}_${realIdx}" style="${photo?'background-image:url('+photo+');':''}"></div>
           ${!mixModeActive?`<button class="sg-del" onclick="event.stopPropagation();removeFromPalette('${pal.id}',${realIdx})">✕</button>
-          <button class="sg-cam" title="${hasPhoto?'Replace or remove photo':'Attach photo'}" onclick="event.stopPropagation();swatchCamAction('${pal.id}',${realIdx},${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
+          <button class="sg-cam" id="sgcam_${pal.id}_${realIdx}" title="${hasPhoto?'Replace or remove photo':'Attach photo'}" onclick="event.stopPropagation();swatchCamAction('${pal.id}',${realIdx},${hasPhoto})">${hasPhoto?'📷✓':'📷'}</button>
           <button class="sg-photo-toggle${hasPhoto?' has-photo':''}" id="sgt_${pal.id}_${realIdx}" onclick="event.stopPropagation();toggleSwatchPhoto('${pal.id}',${realIdx})" title="Toggle photo/render">${showPhoto?'◼ render':'🖼 photo'}</button>
           <button class="sg-dilute-hint" title="Tap swatch for full paint details">ℹ</button>`:''}
           ${c.custom?'<span class="sg-custom-badge" title="Custom mixed color">🧪 Mixed</span>':''}
