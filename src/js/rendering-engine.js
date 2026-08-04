@@ -318,20 +318,24 @@ function paintSwatchRegion(ctx, hex, gran, transparency, PW, PH, dpr, ox0, oy0, 
         // force at Cream, fading gracefully rather than being pre-suppressed.
         const granAmt = 0.25 + loadCurve*0.75;
 
+        // Strength multipliers and caps tuned down from the original
+        // (0.95/0.92 valley, 0.65/0.55 peak) for a gentler read — same noise
+        // field, same speckle size and placement, just less contrast between
+        // the darkest valleys and lightest blooms.
         const vRaw = Math.max(0, 0.52 - particulate) / 0.52;
-        const valleyStrength = vRaw*vRaw*(3-2*vRaw) * 0.95 * granAmt;
+        const valleyStrength = vRaw*vRaw*(3-2*vRaw) * 0.72 * granAmt;
         const pRaw = Math.max(0, particulate - 0.50) / 0.50;
-        const peakStrength = pRaw*pRaw*(3-2*pRaw) * 0.65 * granAmt;
+        const peakStrength = pRaw*pRaw*(3-2*pRaw) * 0.48 * granAmt;
 
         if(valleyStrength>0){
-          outR = lerp(outR, massR, Math.min(0.92, valleyStrength));
-          outG = lerp(outG, massG, Math.min(0.92, valleyStrength));
-          outB = lerp(outB, massB, Math.min(0.92, valleyStrength));
+          outR = lerp(outR, massR, Math.min(0.74, valleyStrength));
+          outG = lerp(outG, massG, Math.min(0.74, valleyStrength));
+          outB = lerp(outB, massB, Math.min(0.74, valleyStrength));
         }
         if(peakStrength>0){
-          outR = lerp(outR, pR, Math.min(0.55, peakStrength));
-          outG = lerp(outG, pG, Math.min(0.55, peakStrength));
-          outB = lerp(outB, pB, Math.min(0.55, peakStrength));
+          outR = lerp(outR, pR, Math.min(0.40, peakStrength));
+          outG = lerp(outG, pG, Math.min(0.40, peakStrength));
+          outB = lerp(outB, pB, Math.min(0.40, peakStrength));
         }
       }
 
