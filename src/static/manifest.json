@@ -1,0 +1,22 @@
+{
+  "name": "Palette Studio",
+  "short_name": "Palette Studio",
+  "description": "Watercolor palette manager",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e1710",
+  "theme_color": "#1e1710",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
