@@ -130,6 +130,7 @@ document.addEventListener('touchmove', function(e){
 // INIT
 // ══════════════════════════════════════════════════════════════
 renderPaletteList();
+if(typeof autoCheckSyncOnLoad==='function') autoCheckSyncOnLoad();
 (function(){
   try{
     var n = parseInt(localStorage.getItem('wc_changes_since_backup')||'0',10);

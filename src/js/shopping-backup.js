@@ -8,7 +8,11 @@
 // SHOPPING LIST
 // ══════════════════════════════════════════════════════════════
 function loadShoppingList(){ try{return JSON.parse(localStorage.getItem('wc_shopping')||'[]');}catch{return[];} }
-function saveShoppingList(l){ return safeSetItem('wc_shopping',JSON.stringify(l)); }
+function saveShoppingList(l){
+  var ok=safeSetItem('wc_shopping',JSON.stringify(l));
+  if(ok) markLocalDataModified();
+  return ok;
+}
 
 // ══════════════════════════════════════════════════════════════
 // BACKUP / IMPORT-EXPORT

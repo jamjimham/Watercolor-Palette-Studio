@@ -10,7 +10,11 @@
 function loadTubeData(){
   try{return JSON.parse(localStorage.getItem('wc_tubes')||'{}');}catch{return{};}
 }
-function saveTubeData(d){ return safeSetItem('wc_tubes',JSON.stringify(d)); }
+function saveTubeData(d){
+  var ok=safeSetItem('wc_tubes',JSON.stringify(d));
+  if(ok) markLocalDataModified();
+  return ok;
+}
 var tubeData=loadTubeData();
 
 function getTubeKey(c){return c.brand+'::'+c.name;}

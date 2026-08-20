@@ -109,9 +109,19 @@ window.addEventListener('unhandledrejection', function(e){
 function loadPalettes(){
   try{return JSON.parse(localStorage.getItem('wc_palettes')||'[]');}catch{return[];}
 }
+// Tracks when local data actually, successfully changed to disk — distinct
+// from "when did this device last talk to the sync server." Sync push/pull
+// decisions need to compare against THIS, not a communication timestamp,
+// or a device whose big data save silently failed (quota) but whose small
+// sync-timestamp write still succeeded can look falsely "up to date" and
+// push its stale data over a genuinely newer server copy.
+function markLocalDataModified(){
+  safeSetItem('wc_local_data_modified_at', new Date().toISOString());
+}
+
 function savePalettes(p){
   var ok=safeSetItem('wc_palettes',JSON.stringify(p));
-  if(ok) trackChangeForBackupReminder();
+  if(ok){ trackChangeForBackupReminder(); markLocalDataModified(); }
   return ok;
 }
 
@@ -131,7 +141,9 @@ function loadColorPhotos(){
   try{return JSON.parse(localStorage.getItem('wc_color_photos')||'{}');}catch{return{};}
 }
 function saveColorPhotos(p){
-  return safeSetItem('wc_color_photos',JSON.stringify(p));
+  var ok=safeSetItem('wc_color_photos',JSON.stringify(p));
+  if(ok) markLocalDataModified();
+  return ok;
 }
 let colorPhotos=loadColorPhotos();
 

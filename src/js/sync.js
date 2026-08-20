@@ -160,14 +160,20 @@ function applyRemoteData(remoteBackup){
 }
 
 // ── Smart single-button sync ──────────────────────────────────────────
-// Compares timestamps rather than asking the user to pick push vs pull —
-// whichever side is newer wins, same last-write-wins model used
-// throughout (no field-level merge, by design, to keep this predictable).
+// Compares "when did local data actually last change" (markLocalDataModified,
+// tied to genuinely successful saves) against the server's updated_at —
+// NOT against lastSyncedAt (when this device last talked to the server).
+// Those are different things: if a local save silently fails (e.g. storage
+// full) but the tiny sync-timestamp write still succeeds, lastSyncedAt can
+// keep matching the server even while the actual data underneath has
+// reverted — which would make this device wrongly look "not behind" and
+// push its stale data over a genuinely newer server copy.
 function syncNow(){
   if(!isSyncPaired()){ showToast('Set up sync first'); return; }
   syncState.syncing = true; renderSyncCard();
+  var localModifiedAt = localStorage.getItem('wc_local_data_modified_at');
   sbFetchSyncRow(syncState.pairingCode).then(function(row){
-    var remoteNewer = row && (!syncState.lastSyncedAt || new Date(row.updated_at) > new Date(syncState.lastSyncedAt));
+    var remoteNewer = row && (!localModifiedAt || new Date(row.updated_at) > new Date(localModifiedAt));
     if(remoteNewer){
       return applyRemoteData(row.data).then(function(){
         setLastSyncedAt(row.updated_at);
@@ -257,6 +263,30 @@ function blobToDataUrl(blob){
     reader.onload = function(){ resolve(reader.result); };
     reader.onerror = reject;
     reader.readAsDataURL(blob);
+  });
+}
+
+// ── Automatic check on app startup ─────────────────────────────────────
+// Runs once, right after the app's first render. Deliberately pull-only —
+// never auto-pushes, since that could silently overwrite a genuinely newer
+// local change the user hasn't gotten around to syncing yet. Fails
+// completely silently on any error (offline, server unreachable) so
+// opening the app with no connection never shows an alarming error for a
+// background check nobody asked to see. Only speaks up if it actually
+// finds and applies something newer.
+function autoCheckSyncOnLoad(){
+  if(!isSyncPaired()) return;
+  var localModifiedAt = localStorage.getItem('wc_local_data_modified_at');
+  sbFetchSyncRow(syncState.pairingCode).then(function(row){
+    if(!row) return;
+    var remoteNewer = !localModifiedAt || new Date(row.updated_at) > new Date(localModifiedAt);
+    if(!remoteNewer) return;
+    return applyRemoteData(row.data).then(function(){
+      setLastSyncedAt(row.updated_at);
+      showToast('Synced newer data from another device');
+    });
+  }).catch(function(err){
+    console.warn('Startup sync check skipped (offline or unreachable):', err);
   });
 }
 
