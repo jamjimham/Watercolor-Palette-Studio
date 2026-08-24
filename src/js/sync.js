@@ -100,24 +100,19 @@ function unlinkSync(){
 }
 
 // ── Core REST calls ──────────────────────────────────────────────────
+// Explicit order+limit so we always get the single most-recently-updated
+// row for this pairing code — without this, if the DB ever ends up with
+// more than one row under the same code (e.g. a missing/violated unique
+// constraint turning an intended upsert into a plain insert), a plain
+// "select=*" has no guaranteed row order and can silently hand back a
+// much older row, undoing real syncs with no error and no warning.
 function sbFetchSyncRow(code){
-  return fetch(SB_URL+"/rest/v1/palette_studio_sync?pairing_code=eq."+encodeURIComponent(code)+"&select=*", {
-    headers: sbHeaders()
-  }).then(function(r){
-    if(!r.ok) throw new Error('Sync fetch failed: '+r.status);
-    return r.json();
-  }).then(function(rows){ return rows && rows[0] ? rows[0] : null; });
-}
-
-function sbUpsertSyncRow(code, data){
-  return fetch(SB_URL+"/rest/v1/palette_studio_sync", {
-    method: "POST",
-    headers: sbHeaders({ "Prefer": "resolution=merge-duplicates,return=representation" }),
-    body: JSON.stringify({ pairing_code: code, data: data })
-  }).then(function(r){
-    if(!r.ok) throw new Error('Sync upsert failed: '+r.status);
-    return r.json();
-  }).then(function(rows){ return rows[0]; });
+ return fetch(SB_URL+"/rest/v1/palette_studio_sync?pairing_code=eq."+encodeURIComponent(code)+"&select=*&order=updated_at.desc&limit=1", {
+   headers: sbHeaders()
+ }).then(function(r){
+   if(!r.ok) throw new Error('Sync fetch failed: '+r.status);
+   return r.json();
+ }).then(function(rows){ return rows && rows[0] ? rows[0] : null; });
 }
 
 // ── Push: local → remote ─────────────────────────────────────────────
