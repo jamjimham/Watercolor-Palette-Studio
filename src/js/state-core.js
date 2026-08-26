@@ -174,10 +174,15 @@ function isColorPhotoVisible(c){
 
 // One-time migration: earlier versions stored photos per palette-swatch
 // instance (pal.colors[idx].photo). Fold any of those into the shared store
-// so existing photos keep showing up instead of silently vanishing.
+// so existing photos keep showing up instead of silently vanishing —
+// *and* strip the embedded copy out of the palette entry itself. Leaving
+// it in place after copying was the actual cause of wc_palettes bloating
+// indefinitely: every photo ever attached stayed duplicated in full,
+// once here and once in the shared store, forever inflating every future
+// palette save regardless of any photo-specific storage fix.
 (function migrateSwatchPhotosToGlobal(){
   try{
-    let changed=false;
+    let changed=false, palettesChanged=false;
     palettes.forEach(p=>{
       (p.colors||[]).forEach(c=>{
         if(c.photo){
@@ -186,10 +191,14 @@ function isColorPhotoVisible(c){
             colorPhotos[k]={photo:c.photo, visible:c.photoVisible!==false};
             changed=true;
           }
+          delete c.photo;
+          delete c.photoVisible;
+          palettesChanged=true;
         }
       });
     });
     if(changed) saveColorPhotos(colorPhotos);
+    if(palettesChanged) savePalettes(palettes);
   }catch(e){}
 })();
 
